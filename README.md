@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Facturacion Shanghai
 
-## Getting Started
+App Next.js 16 con integración de Supabase para catálogo e ingestión desde el sistema local.
 
-First, run the development server:
+## Variables de entorno
+
+Duplica `.env.example` a tu archivo `.env.local` o `.env` y completa:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+INTEGRATION_API_KEY=
+INTEGRATION_HMAC_SECRET=
+```
+
+## Desarrollo
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Supabase local
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+El proyecto ya incluye `supabase/config.toml`, una migración inicial y un seed de ejemplo.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run supabase:start
+npm run db:reset
+npm run supabase:status
+```
 
-## Learn More
+## Migraciones
 
-To learn more about Next.js, take a look at the following resources:
+Crear una migración nueva:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run migration:new -- nombre_de_la_migracion
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Aplicar migraciones al proyecto vinculado:
 
-## Deploy on Vercel
+```bash
+npm run db:push
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Traer cambios remotos como migración:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run db:pull
+```
+
+## Esquema actual
+
+La migración inicial crea `public.products` con:
+
+- clave única por `branch_id + external_id`
+- índice parcial para el catálogo público visible
+- RLS habilitado para lectura pública solo de productos activos y online
+
+## Lint
+
+```bash
+npm run lint
+```
