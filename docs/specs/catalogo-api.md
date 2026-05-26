@@ -52,7 +52,6 @@ No cubre todavía:
 ### Controlados por el sistema local
 
 - `external_id`
-- `branch_id`
 - `sku`
 - `name`
 - `price_usd`
@@ -77,6 +76,38 @@ No cubre todavía:
 - `online_enabled` no debe ser sobreescrito por sincronización salvo que esa regla cambie explícitamente después.
 - `image_url` y `description` no deben ser sobreescritos por sincronización automática.
 - El catálogo público solo debe exponer productos con `is_active = true` y `online_enabled = true`.
+
+## Seguridad De Integración
+
+Las rutas bajo `/api/integration/*` deben tratarse como integración server-to-server y no como API pública.
+
+Requisitos iniciales:
+
+- header `Authorization: Bearer <INTEGRATION_API_KEY>`
+- header `X-Integration-Timestamp: <ISO date>`
+- header `X-Integration-Signature: sha256=<hex>` o `<hex>`
+
+Firma esperada:
+
+```text
+${timestamp}.${method}.${pathname}.${rawBody}
+```
+
+Donde:
+
+- `timestamp` es el valor exacto enviado en `X-Integration-Timestamp`
+- `method` es el verbo HTTP en mayúsculas
+- `pathname` es la ruta, por ejemplo `/api/integration/branches/centro/products/upsert`
+- `rawBody` es el body JSON exacto enviado como texto
+
+La firma se calcula con `HMAC-SHA256` usando `INTEGRATION_HMAC_SECRET`.
+
+Reglas iniciales de seguridad:
+
+- rechazar requests sin token o sin firma
+- rechazar requests con timestamp vencido
+- comparar firma y API key en tiempo constante
+- no exponer estas rutas a consumo frontend
 
 ## Endpoints Propuestos
 
@@ -117,7 +148,7 @@ Devuelve el detalle de un producto visible de una sucursal.
 
 ## Integración con sistema local
 
-### `POST /api/integration/products/upsert`
+### `POST /api/integration/branches/:branchId/products/upsert`
 
 Crea o actualiza un producto sincronizado desde el sistema local.
 
@@ -126,7 +157,6 @@ Payload tentativo:
 ```json
 {
   "external_id": "P000123",
-  "branch_id": "centro",
   "sku": "PAN-CAN-01",
   "name": "Pan canilla",
   "price_usd": 1.25,
@@ -143,7 +173,7 @@ Comportamiento esperado:
 - actualizar si ya existe
 - conservar campos online propios no enviados por el POS
 
-### `PATCH /api/integration/products/:externalId/stock`
+### `PATCH /api/integration/branches/:branchId/products/:externalId/stock`
 
 Actualiza stock de un producto para una sucursal.
 
@@ -151,13 +181,12 @@ Payload tentativo:
 
 ```json
 {
-  "branch_id": "centro",
   "stock": 37,
   "updated_at_source": "2026-05-11T10:45:00Z"
 }
 ```
 
-### `PATCH /api/integration/products/:externalId/price`
+### `PATCH /api/integration/branches/:branchId/products/:externalId/price`
 
 Actualiza precios en ambas monedas.
 
@@ -165,14 +194,13 @@ Payload tentativo:
 
 ```json
 {
-  "branch_id": "centro",
   "price_usd": 1.35,
   "price_ves": 118.75,
   "updated_at_source": "2026-05-11T10:46:00Z"
 }
 ```
 
-### `PATCH /api/integration/products/:externalId/status`
+### `PATCH /api/integration/branches/:branchId/products/:externalId/status`
 
 Activa o desactiva el producto en función del sistema local.
 
@@ -180,7 +208,6 @@ Payload tentativo:
 
 ```json
 {
-  "branch_id": "centro",
   "is_active": false,
   "updated_at_source": "2026-05-11T10:47:00Z"
 }
