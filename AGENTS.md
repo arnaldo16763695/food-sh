@@ -21,6 +21,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `app/globals.css` imports `tailwindcss`, `tw-animate-css`, and `shadcn/tailwind.css`. Preserve those imports unless intentionally changing the styling stack.
 - shadcn is configured in `components.json` with `style: radix-nova`, `rsc: true`, and aliases for `@/components`, `@/components/ui`, `@/lib`, and `@/lib/utils`.
 - Reuse `cn()` from `lib/utils.ts` for className composition. Existing shadcn UI components live under `components/ui/`.
+- Prefer Tailwind's canonical utilities over arbitrary values when an exact built-in utility already exists; for example use `rounded-4xl` instead of `rounded-[2rem]`, use `border-[color-mix(...)]` instead of the redundant `border-[color:color-mix(...)]` form, and prefer variable shorthands like `bg-(--brand-secondary)` instead of `bg-[var(--brand-secondary)]` when supported.
 - Any user-facing frontend copy written in Spanish must use correct grammar, accents, punctuation, and opening question/exclamation marks (`¿`, `¡`). Do not ship placeholder or unaccented Spanish text.
 
 ## Linting
