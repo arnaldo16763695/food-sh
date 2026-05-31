@@ -11,7 +11,9 @@ import {
   Sun,
 } from "lucide-react"
 import { useTheme } from "next-themes"
+import { useRouter } from "next/navigation"
 
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser"
 import {
   Avatar,
   AvatarFallback,
@@ -45,6 +47,14 @@ export function NavUser({
   const { isMobile } = useSidebar()
   const { resolvedTheme, setTheme } = useTheme()
   const isDark = resolvedTheme === "dark"
+  const router = useRouter()
+
+  async function handleLogout() {
+    const supabase = createSupabaseBrowserClient()
+    await supabase.auth.signOut()
+    router.replace("/admin/login")
+    router.refresh()
+  }
 
   return (
     <SidebarMenu>
@@ -111,7 +121,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
               Cerrar sesión
             </DropdownMenuItem>
