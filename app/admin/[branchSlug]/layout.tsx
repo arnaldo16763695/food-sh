@@ -1,4 +1,7 @@
 
+import Link from "next/link"
+
+import { requireAdminBranchAccess } from "@/lib/admin-auth"
 import { AppSidebar } from "@/components/admin/app-sidebar"
 import {
   Breadcrumb,
@@ -16,15 +19,22 @@ import {
 } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
-export default function AdminLayout({
+type AdminLayoutProps = Readonly<{
+  children: React.ReactNode
+  params: Promise<{ branchSlug: string }>
+}>
+
+export default async function AdminLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+  params,
+}: AdminLayoutProps) {
+  const { branchSlug } = await params
+  const { currentBranch } = await requireAdminBranchAccess(branchSlug)
+
   return (
     <TooltipProvider delayDuration={150}>
       <SidebarProvider>
-        <AppSidebar />
+        <AppSidebar branchSlug={currentBranch.branchSlug} />
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
             <div className="flex items-center gap-2 px-4">
@@ -36,13 +46,13 @@ export default function AdminLayout({
               <Breadcrumb>
                 <BreadcrumbList>
                   <BreadcrumbItem className="hidden md:block">
-                    <BreadcrumbLink href="#">
-                      Build Your Application
+                    <BreadcrumbLink asChild>
+                      <Link href="/admin">Administración</Link>
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                   <BreadcrumbSeparator className="hidden md:block" />
                   <BreadcrumbItem>
-                    <BreadcrumbPage>Data Fetching</BreadcrumbPage>
+                    <BreadcrumbPage>{currentBranch.branchTitle}</BreadcrumbPage>
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
