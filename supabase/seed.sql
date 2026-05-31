@@ -1,3 +1,33 @@
+insert into public.branches (
+  id,
+  slug,
+  name,
+  is_active,
+  created_at,
+  updated_at
+) values
+  (
+    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    'centro',
+    'Sucursal Centro',
+    true,
+    '2026-05-24T10:00:00.000Z',
+    '2026-05-24T10:00:00.000Z'
+  ),
+  (
+    'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    'norte',
+    'Sucursal Norte',
+    true,
+    '2026-05-24T10:00:00.000Z',
+    '2026-05-24T10:00:00.000Z'
+  )
+on conflict (slug) do update
+set
+  name = excluded.name,
+  is_active = excluded.is_active,
+  updated_at = excluded.updated_at;
+
 insert into public.products (
   id,
   external_id,

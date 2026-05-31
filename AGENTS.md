@@ -12,6 +12,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ## Structure
 
 - This is a single Next.js 16 app using the App Router. The current root entrypoints are `app/layout.tsx` and `app/page.tsx`.
+- Public storefront routes are being organized under `app/tienda/[branchSlug]/`; admin routes are being organized under `app/admin/[branchSlug]/`.
 - The repo uses no `src/` directory. The TypeScript path alias `@/*` resolves from the repository root.
 - `CLAUDE.md` only points to `@AGENTS.md`, so keep this file as the canonical repo instruction file.
 

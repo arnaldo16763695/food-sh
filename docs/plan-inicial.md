@@ -29,6 +29,8 @@ La plataforma online debe permitir:
 - El panel administrativo usará `shadcn/ui`.
 - La bolsa de compra usará `Zustand`.
 - Habrá una tienda por sucursal.
+- El storefront público quedará segmentado por sucursal en rutas tipo `/tienda/[branchSlug]`.
+- El panel administrativo quedará segmentado por sucursal en rutas tipo `/admin/[branchSlug]`.
 - Cada pedido pertenecerá a una sola sucursal.
 - El stock se manejará por sucursal.
 - La plataforma debe soportar `USD` y `VES`.
