@@ -4,7 +4,7 @@ import { type Database } from "@/lib/database.types"
 
 type SupabaseKey = "NEXT_PUBLIC_SUPABASE_ANON_KEY" | "SUPABASE_SERVICE_ROLE_KEY"
 
-function getRequiredEnv(name: "NEXT_PUBLIC_SUPABASE_URL" | SupabaseKey) {
+export function getRequiredEnv(name: "NEXT_PUBLIC_SUPABASE_URL" | SupabaseKey) {
   const value = process.env[name]
 
   if (!value) {
