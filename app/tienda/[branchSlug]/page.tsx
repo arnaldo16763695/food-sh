@@ -79,7 +79,7 @@ export default async function BranchStorePage({ params }: BranchStorePageProps) 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,var(--brand-surface)_0%,#f5f1e8_40%,#fbfaf7_100%)] text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
       <div className="mx-auto flex w-full max-w-7xl flex-col px-5 pb-14 pt-5 sm:px-6 lg:px-10">
-        <StorefrontHeader />
+        <StorefrontHeader branchSlug={selectedBranch.slug} />
 
         <StorefrontHero
           selectedBranchSlug={selectedBranch.slug}
@@ -102,7 +102,7 @@ export default async function BranchStorePage({ params }: BranchStorePageProps) 
             currentProducts.length > 0 ? (
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {currentProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard key={product.id} branchSlug={selectedBranch.slug} product={product} />
                 ))}
               </div>
             ) : (

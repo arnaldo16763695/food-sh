@@ -1,12 +1,14 @@
 import Image from "next/image"
 
+import { AddToBagButton } from "@/components/site/add-to-bag-button"
 import { type CatalogProduct } from "@/lib/catalog-types"
 
 type ProductCardProps = {
+  branchSlug: string
   product: CatalogProduct
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ branchSlug, product }: ProductCardProps) {
   const hasImage = Boolean(product.imageUrl)
 
   return (
@@ -81,16 +83,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
 
         <div className="pt-1">
-          <button
-            type="button"
-            className="inline-flex h-11 w-full items-center justify-center rounded-full px-4 text-sm font-medium transition-colors"
-            style={{
-              backgroundColor: "var(--brand-primary)",
-              color: "var(--brand-primary-foreground)",
-            }}
-          >
-            Agregar
-          </button>
+          <AddToBagButton branchSlug={branchSlug} product={product} />
         </div>
       </div>
     </article>
