@@ -1,3 +1,5 @@
+import Image from "next/image"
+
 import { type CatalogProduct } from "@/lib/catalog-types"
 
 type ProductCardProps = {
@@ -11,17 +13,28 @@ export function ProductCard({ product }: ProductCardProps) {
     <article className="group overflow-hidden rounded-4xl border border-white/70 bg-white shadow-[0_20px_50px_rgba(24,24,27,0.05)] transition-transform duration-200 hover:-translate-y-1 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="relative aspect-[4/3] overflow-hidden">
         {hasImage ? (
-          <div
-            className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-            style={{ backgroundImage: `url(${product.imageUrl})` }}
-          />
+          <div className="absolute inset-0 bg-[linear-gradient(135deg,color-mix(in_oklab,var(--brand-accent)_16%,white)_0%,white_52%,color-mix(in_oklab,var(--brand-secondary)_10%,white)_100%)] dark:bg-[linear-gradient(135deg,color-mix(in_oklab,var(--brand-deep)_70%,black)_0%,#17171d_55%,color-mix(in_oklab,var(--brand-secondary)_26%,black)_100%)]" />
+        ) : null}
+
+        {hasImage ? (
+          <div className="absolute inset-0 p-4 transition-transform duration-500 group-hover:scale-[1.03]">
+            <div className="relative h-full w-full overflow-hidden rounded-3xl bg-white/80 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.7)] backdrop-blur-sm dark:bg-black/10 dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]">
+              <Image
+                src={product.imageUrl!}
+                alt={product.name}
+                fill
+                sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
+                className="object-contain p-3"
+              />
+            </div>
+          </div>
         ) : null}
 
         <div
           className="absolute inset-0"
           style={{
             background: hasImage
-              ? "linear-gradient(180deg, transparent 0%, rgba(24, 24, 27, 0.12) 55%, rgba(24, 24, 27, 0.58) 100%)"
+              ? "linear-gradient(180deg, rgba(24, 24, 27, 0.02) 0%, rgba(24, 24, 27, 0.08) 55%, rgba(24, 24, 27, 0.22) 100%)"
               : "linear-gradient(135deg, color-mix(in oklab, var(--brand-accent) 26%, white) 0%, color-mix(in oklab, var(--brand-primary) 10%, white) 100%)",
           }}
         />

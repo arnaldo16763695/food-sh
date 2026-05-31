@@ -1,7 +1,9 @@
+import Image from "next/image"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
+import { AdminProductEditDialog } from "@/components/admin/admin-product-edit-dialog"
 import { requireAdminBranchAccess } from "@/lib/admin-auth"
 import { getPublicBranchBySlug } from "@/lib/branches"
 import { listAdminProductsByBranch } from "@/lib/catalog-store"
@@ -67,6 +69,7 @@ export default async function AdminProductsPage({ params }: AdminProductsPagePro
             <table className="min-w-full text-left text-sm">
               <thead className="bg-zinc-50 text-zinc-500 dark:bg-zinc-950 dark:text-zinc-400">
                 <tr>
+                  <th className="px-6 py-4 font-medium">Imagen</th>
                   <th className="px-6 py-4 font-medium">Producto</th>
                   <th className="px-6 py-4 font-medium">SKU</th>
                   <th className="px-6 py-4 font-medium">USD</th>
@@ -74,11 +77,29 @@ export default async function AdminProductsPage({ params }: AdminProductsPagePro
                   <th className="px-6 py-4 font-medium">Stock</th>
                   <th className="px-6 py-4 font-medium">POS</th>
                   <th className="px-6 py-4 font-medium">Online</th>
+                  <th className="px-6 py-4 font-medium">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {products.map((product) => (
                   <tr key={product.id} className="border-t border-zinc-200 dark:border-zinc-800">
+                    <td className="px-6 py-4 align-top">
+                      <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-950">
+                        {product.imageUrl ? (
+                          <Image
+                            src={product.imageUrl}
+                            alt={product.name}
+                            fill
+                            sizes="56px"
+                            className="object-contain p-1.5"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-[10px] font-medium uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
+                            Sin imagen
+                          </div>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 align-top">
                       <div className="space-y-1">
                         <p className="font-medium text-zinc-950 dark:text-zinc-50">{product.name}</p>
@@ -98,6 +119,9 @@ export default async function AdminProductsPage({ params }: AdminProductsPagePro
                       <span className={product.onlineEnabled ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"}>
                         {product.onlineEnabled ? "Visible" : "Oculto"}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 align-top">
+                      <AdminProductEditDialog branchSlug={branch.slug} product={product} />
                     </td>
                   </tr>
                 ))}

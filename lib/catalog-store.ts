@@ -82,6 +82,37 @@ export async function listAdminProductsByBranch(branchId: string) {
   return data.map(mapProduct)
 }
 
+export async function updateAdminProduct({
+  branchId,
+  productId,
+  description,
+  onlineEnabled,
+}: {
+  branchId: string
+  productId: string
+  description: string
+  onlineEnabled: boolean
+}) {
+  const supabase = createSupabaseAdminClient()
+  const { data, error } = await supabase
+    .from("products")
+    .update({
+      description,
+      online_enabled: onlineEnabled,
+      updated_at: nowIso(),
+    })
+    .eq("branch_id", branchId)
+    .eq("id", productId)
+    .select("*")
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return mapProduct(data)
+}
+
 export async function getPublicProductById(branchId: string, id: string) {
   const supabase = createSupabasePublicClient()
   const { data, error } = await supabase
