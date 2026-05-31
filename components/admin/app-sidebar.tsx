@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { usePathname } from "next/navigation"
 import {
   Blocks,
   ClipboardList,
@@ -189,15 +190,111 @@ const data = {
   ],
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
+  branchSlug?: string
+}
+
+export function AppSidebar({ branchSlug, ...props }: AppSidebarProps) {
+  const pathname = usePathname()
+
+  const navMain = React.useMemo(() => {
+    if (!branchSlug) {
+      return data.navMain
+    }
+
+    return [
+      {
+        title: "Resumen operativo",
+        url: `/admin/${branchSlug}`,
+        icon: LayoutDashboard,
+        isActive: pathname === `/admin/${branchSlug}`,
+        items: [
+          { title: "Vista general", url: `/admin/${branchSlug}` },
+          { title: "Alertas", url: `/admin/${branchSlug}` },
+        ],
+      },
+      {
+        title: "Pedidos",
+        url: `/admin/${branchSlug}/orders`,
+        icon: ClipboardList,
+        items: [
+          { title: "Pedidos activos", url: `/admin/${branchSlug}/orders` },
+          { title: "Historial", url: `/admin/${branchSlug}/orders` },
+        ],
+      },
+      {
+        title: "Productos",
+        url: `/admin/${branchSlug}/products`,
+        icon: Package2,
+        isActive: pathname.startsWith(`/admin/${branchSlug}/products`),
+        items: [
+          { title: "Catálogo online", url: `/admin/${branchSlug}/products` },
+          { title: "Precios y stock", url: `/admin/${branchSlug}/products` },
+          { title: "Imágenes y contenido", url: `/admin/${branchSlug}/products` },
+        ],
+      },
+      {
+        title: "Sucursales y horarios",
+        url: `/admin/${branchSlug}/settings`,
+        icon: Store,
+        items: [
+          { title: "Horarios de atención", url: `/admin/${branchSlug}/settings` },
+          { title: "Cierres manuales", url: `/admin/${branchSlug}/settings` },
+        ],
+      },
+      {
+        title: "Clientes",
+        url: `/admin/${branchSlug}/customers`,
+        icon: Users,
+        items: [
+          { title: "Perfiles", url: `/admin/${branchSlug}/customers` },
+          { title: "Historial de compras", url: `/admin/${branchSlug}/customers` },
+        ],
+      },
+      {
+        title: "Integraciones",
+        url: `/admin/${branchSlug}/integrations`,
+        icon: PlugZap,
+        items: [
+          { title: "Sincronización POS", url: `/admin/${branchSlug}/integrations` },
+          { title: "Logs y errores", url: `/admin/${branchSlug}/integrations` },
+        ],
+      },
+    ]
+  }, [branchSlug, pathname])
+
+  const quickLinks = React.useMemo(() => {
+    if (!branchSlug) {
+      return data.projects
+    }
+
+    return [
+      {
+        name: "Dashboard principal",
+        url: `/admin/${branchSlug}`,
+        icon: Blocks,
+      },
+      {
+        name: "Productos",
+        url: `/admin/${branchSlug}/products`,
+        icon: ShoppingBasket,
+      },
+      {
+        name: "Storefront",
+        url: `/tienda/${branchSlug}`,
+        icon: Settings2,
+      },
+    ]
+  }, [branchSlug])
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        <NavMain items={navMain} />
+        <NavProjects projects={quickLinks} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
