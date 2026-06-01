@@ -48,6 +48,23 @@ ${timestamp}.${method}.${pathname}.${rawBody}
 
 Donde `pathname` debe coincidir exactamente con la ruta solicitada.
 
+## CORS Para Pruebas Desde Navegador
+
+Las rutas de integracion ahora responden preflight `OPTIONS` y devuelven headers CORS.
+
+Configuracion:
+
+- `INTEGRATION_ENABLE_CORS=false` desactiva completamente CORS en estas rutas
+- `INTEGRATION_ALLOWED_ORIGINS` opcional, separada por comas
+- si no se define, la API responde con `Access-Control-Allow-Origin: *`
+- si pruebas desde un archivo HTML abierto directamente en el navegador, el origin puede ser `null`
+- en ese caso puedes usar por ejemplo `INTEGRATION_ALLOWED_ORIGINS=null,http://localhost:5500`
+
+Nota importante:
+
+- esta API sigue pensada para integracion server-to-server
+- exponer `INTEGRATION_API_KEY` y `INTEGRATION_HMAC_SECRET` en JavaScript del navegador no es seguro para produccion
+
 ## Flujo Actual De Orders
 
 - la tienda online crea el pedido con `pago_validado = false`

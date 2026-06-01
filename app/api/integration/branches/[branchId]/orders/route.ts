@@ -1,9 +1,14 @@
 import { jsonOk } from "@/lib/api-response"
 import { verifyIntegrationRequest } from "@/lib/integration-auth"
+import { createIntegrationOptionsResponse, withIntegrationCors } from "@/lib/integration-cors"
 import { listIntegrationOrdersByBranch } from "@/lib/orders"
 import { type NextRequest } from "next/server"
 
 export const runtime = "nodejs"
+
+export function OPTIONS(request: NextRequest) {
+  return createIntegrationOptionsResponse(request, ["GET"])
+}
 
 export async function GET(
   request: NextRequest,
@@ -12,9 +17,9 @@ export async function GET(
   const auth = await verifyIntegrationRequest(request)
 
   if (!auth.ok) {
-    return auth.response
+    return withIntegrationCors(request, auth.response, ["GET", "OPTIONS"])
   }
 
   const { branchId } = await params
-  return jsonOk(await listIntegrationOrdersByBranch(branchId))
+  return withIntegrationCors(request, jsonOk(await listIntegrationOrdersByBranch(branchId)), ["GET", "OPTIONS"])
 }
