@@ -9,12 +9,14 @@ const DEFAULT_BRANCHES: Branch[] = [
     slug: "centro",
     title: "Sucursal Centro",
     isActive: true,
+    onlineOrderMode: "auto",
   },
   {
     id: "fallback-norte",
     slug: "norte",
     title: "Sucursal Norte",
     isActive: true,
+    onlineOrderMode: "auto",
   },
 ]
 
@@ -23,6 +25,7 @@ export type Branch = {
   slug: string
   title: string
   isActive: boolean
+  onlineOrderMode: "auto" | "force_closed" | "force_open"
 }
 
 function mapBranch(row: BranchRow): Branch {
@@ -31,6 +34,7 @@ function mapBranch(row: BranchRow): Branch {
     slug: row.slug,
     title: row.name,
     isActive: row.is_active,
+    onlineOrderMode: row.online_order_mode,
   }
 }
 

@@ -217,6 +217,7 @@ export function AppSidebar({ branchSlug, ...props }: AppSidebarProps) {
         title: "Pedidos",
         url: `/admin/${branchSlug}/orders`,
         icon: ClipboardList,
+        isActive: pathname.startsWith(`/admin/${branchSlug}/orders`),
         items: [
           { title: "Pedidos activos", url: `/admin/${branchSlug}/orders` },
           { title: "Historial", url: `/admin/${branchSlug}/orders` },

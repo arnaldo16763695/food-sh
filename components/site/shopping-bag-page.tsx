@@ -134,7 +134,9 @@ export function ShoppingBagPage({ branch }: ShoppingBagPageProps) {
               </div>
 
               <div className="mt-6 grid gap-2">
-                <Button disabled>Continuar al checkout</Button>
+                <Button asChild>
+                  <Link href={`/tienda/${branch.slug}/checkout`}>Continuar al checkout</Link>
+                </Button>
                 <Button variant="outline" onClick={clear}>Vaciar bolsa</Button>
               </div>
 

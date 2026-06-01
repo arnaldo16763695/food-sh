@@ -2,6 +2,7 @@ insert into public.branches (
   id,
   slug,
   name,
+  online_order_mode,
   is_active,
   created_at,
   updated_at
@@ -10,6 +11,7 @@ insert into public.branches (
     'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
     'centro',
     'Sucursal Centro',
+    'auto',
     true,
     '2026-05-24T10:00:00.000Z',
     '2026-05-24T10:00:00.000Z'
@@ -18,6 +20,7 @@ insert into public.branches (
     'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
     'norte',
     'Sucursal Norte',
+    'auto',
     true,
     '2026-05-24T10:00:00.000Z',
     '2026-05-24T10:00:00.000Z'
@@ -25,8 +28,36 @@ insert into public.branches (
 on conflict (slug) do update
 set
   name = excluded.name,
+  online_order_mode = excluded.online_order_mode,
   is_active = excluded.is_active,
   updated_at = excluded.updated_at;
+
+insert into public.branch_hours (
+  branch_id,
+  weekday,
+  opens_at,
+  closes_at,
+  is_closed
+) values
+  ('centro', 0, '08:00', '20:00', false),
+  ('centro', 1, '08:00', '20:00', false),
+  ('centro', 2, '08:00', '20:00', false),
+  ('centro', 3, '08:00', '20:00', false),
+  ('centro', 4, '08:00', '20:00', false),
+  ('centro', 5, '08:00', '20:00', false),
+  ('centro', 6, '08:00', '20:00', false),
+  ('norte', 0, '08:00', '20:00', false),
+  ('norte', 1, '08:00', '20:00', false),
+  ('norte', 2, '08:00', '20:00', false),
+  ('norte', 3, '08:00', '20:00', false),
+  ('norte', 4, '08:00', '20:00', false),
+  ('norte', 5, '08:00', '20:00', false),
+  ('norte', 6, '08:00', '20:00', false)
+on conflict (branch_id, weekday) do update
+set
+  opens_at = excluded.opens_at,
+  closes_at = excluded.closes_at,
+  is_closed = excluded.is_closed;
 
 insert into public.products (
   id,
