@@ -102,19 +102,16 @@ export class OrderAlreadyInvoicedError extends Error {
   }
 }
 
-function selectOrderListFields() {
-  return "id, branch_id, customer_name, customer_email, customer_phone, fulfillment_type, currency, status, pago_validado, payment_reference, payment_validated_at, pos_facturado, pos_facturado_at, pos_reference, subtotal_usd, subtotal_ves, created_at, updated_at"
-}
+const ORDER_LIST_FIELDS =
+  "id, branch_id, customer_name, customer_email, customer_phone, fulfillment_type, currency, status, pago_validado, payment_reference, payment_validated_at, pos_facturado, pos_facturado_at, pos_reference, subtotal_usd, subtotal_ves, created_at, updated_at" as const
 
-function selectOrderDetailFields() {
-  return `${selectOrderListFields()}, notes`
-}
+const ORDER_DETAIL_FIELDS = `${ORDER_LIST_FIELDS}, notes` as const
 
 export async function listAdminOrdersByBranch(branchSlug: string): Promise<AdminOrderListItem[]> {
   const supabase = createSupabaseAdminClient()
   const { data, error } = await supabase
     .from("orders")
-    .select(selectOrderListFields())
+    .select(ORDER_LIST_FIELDS)
     .eq("branch_id", branchSlug)
     .order("created_at", { ascending: false })
 
@@ -129,7 +126,7 @@ export async function getAdminOrderById(branchSlug: string, orderId: string): Pr
   const supabase = createSupabaseAdminClient()
   const { data: order, error: orderError } = await supabase
     .from("orders")
-    .select(selectOrderDetailFields())
+    .select(ORDER_DETAIL_FIELDS)
     .eq("branch_id", branchSlug)
     .eq("id", orderId)
     .maybeSingle()
@@ -177,7 +174,7 @@ export async function listIntegrationOrdersByBranch(branchSlug: string): Promise
   const supabase = createSupabaseAdminClient()
   const { data, error } = await supabase
     .from("orders")
-    .select(selectOrderListFields())
+    .select(ORDER_LIST_FIELDS)
     .eq("branch_id", branchSlug)
     .eq("status", "submitted")
     .eq("pago_validado", true)
@@ -229,7 +226,7 @@ export async function markOrderAsPosInvoiced({
     .eq("status", "submitted")
     .eq("pago_validado", true)
     .eq("pos_facturado", false)
-    .select(selectOrderListFields())
+    .select(ORDER_LIST_FIELDS)
     .maybeSingle()
 
   if (error) {
@@ -270,7 +267,7 @@ export async function markOrderPaymentValidated({
     .eq("id", orderId)
     .eq("status", "submitted")
     .eq("pago_validado", false)
-    .select(selectOrderListFields())
+    .select(ORDER_LIST_FIELDS)
     .maybeSingle()
 
   if (error) {
@@ -283,7 +280,7 @@ export async function markOrderPaymentValidated({
 
   const { data: existing, error: existingError } = await supabase
     .from("orders")
-    .select(selectOrderListFields())
+    .select(ORDER_LIST_FIELDS)
     .eq("id", orderId)
     .maybeSingle()
 
