@@ -120,3 +120,46 @@ export function validateStatusUpdate(value: unknown) {
 
   return { ok: true as const, value: payload }
 }
+
+export function validatePosInvoiceUpdate(value: unknown) {
+  if (!isRecord(value)) {
+    return { ok: false as const, error: "Body must be a JSON object." }
+  }
+
+  const payload = {
+    pos_reference: value.pos_reference as string,
+    facturado_at: value.facturado_at as string,
+  }
+
+  if (!isNonEmptyString(payload.pos_reference) || !isIsoDateString(payload.facturado_at)) {
+    return { ok: false as const, error: "Body does not match the expected POS invoice payload." }
+  }
+
+  return { ok: true as const, value: payload }
+}
+
+export function validatePaymentValidationUpdate(value: unknown) {
+  if (!isRecord(value)) {
+    return { ok: false as const, error: "Body must be a JSON object." }
+  }
+
+  const payload = {
+    payment_reference: value.payment_reference as string,
+    payment_validated_at: value.payment_validated_at as string | undefined,
+  }
+
+  if (
+    !isNonEmptyString(payload.payment_reference) ||
+    (payload.payment_validated_at !== undefined && !isIsoDateString(payload.payment_validated_at))
+  ) {
+    return { ok: false as const, error: "Body does not match the expected payment validation payload." }
+  }
+
+  return {
+    ok: true as const,
+    value: {
+      payment_reference: payload.payment_reference,
+      payment_validated_at: payload.payment_validated_at,
+    },
+  }
+}

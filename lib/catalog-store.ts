@@ -82,6 +82,15 @@ export async function listAdminProductsByBranch(branchId: string) {
   return data.map(mapProduct)
 }
 
+export async function listIntegrationProductsByBranch(branchId: string) {
+  return listAdminProductsByBranch(branchId)
+}
+
+export async function getIntegrationProductByExternalId(branchId: string, externalId: string) {
+  const product = await getProductForIntegration(branchId, externalId)
+  return product ? mapProduct(product) : null
+}
+
 export async function updateAdminProduct({
   branchId,
   productId,

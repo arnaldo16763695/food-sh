@@ -3,6 +3,7 @@ import { assertBranchIsOpenForCheckout } from "@/lib/branch-hours"
 
 type OrderCurrency = "USD" | "VES"
 type FulfillmentType = "pickup" | "delivery"
+type OrderStatus = "draft" | "submitted" | "cancelled"
 
 type DraftOrderItemInput = {
   productId: string
@@ -19,7 +20,13 @@ export type AdminOrderListItem = {
   customerPhone: string | null
   fulfillmentType: FulfillmentType
   currency: OrderCurrency
-  status: "draft" | "submitted" | "cancelled"
+  status: OrderStatus
+  pagoValidado: boolean
+  paymentReference: string | null
+  paymentValidatedAt: string | null
+  posFacturado: boolean
+  posFacturadoAt: string | null
+  posReference: string | null
   subtotalUsd: number
   subtotalVes: number
   createdAt: string
@@ -51,7 +58,13 @@ function mapAdminOrder(order: {
   customer_phone: string | null
   fulfillment_type: FulfillmentType
   currency: OrderCurrency
-  status: "draft" | "submitted" | "cancelled"
+  status: OrderStatus
+  pago_validado: boolean
+  payment_reference: string | null
+  payment_validated_at: string | null
+  pos_facturado: boolean
+  pos_facturado_at: string | null
+  pos_reference: string | null
   subtotal_usd: number
   subtotal_ves: number
   created_at: string
@@ -66,6 +79,12 @@ function mapAdminOrder(order: {
     fulfillmentType: order.fulfillment_type,
     currency: order.currency,
     status: order.status,
+    pagoValidado: order.pago_validado,
+    paymentReference: order.payment_reference,
+    paymentValidatedAt: order.payment_validated_at,
+    posFacturado: order.pos_facturado,
+    posFacturadoAt: order.pos_facturado_at,
+    posReference: order.pos_reference,
     subtotalUsd: order.subtotal_usd,
     subtotalVes: order.subtotal_ves,
     createdAt: order.created_at,
@@ -73,13 +92,29 @@ function mapAdminOrder(order: {
   }
 }
 
+export type IntegrationOrderListItem = AdminOrderListItem
+export type IntegrationOrderDetail = AdminOrderDetail
+
+export class OrderAlreadyInvoicedError extends Error {
+  constructor() {
+    super("Order already invoiced in POS.")
+    this.name = "OrderAlreadyInvoicedError"
+  }
+}
+
+function selectOrderListFields() {
+  return "id, branch_id, customer_name, customer_email, customer_phone, fulfillment_type, currency, status, pago_validado, payment_reference, payment_validated_at, pos_facturado, pos_facturado_at, pos_reference, subtotal_usd, subtotal_ves, created_at, updated_at"
+}
+
+function selectOrderDetailFields() {
+  return `${selectOrderListFields()}, notes`
+}
+
 export async function listAdminOrdersByBranch(branchSlug: string): Promise<AdminOrderListItem[]> {
   const supabase = createSupabaseAdminClient()
   const { data, error } = await supabase
     .from("orders")
-    .select(
-      "id, branch_id, customer_name, customer_email, customer_phone, fulfillment_type, currency, status, subtotal_usd, subtotal_ves, created_at, updated_at",
-    )
+    .select(selectOrderListFields())
     .eq("branch_id", branchSlug)
     .order("created_at", { ascending: false })
 
@@ -94,9 +129,7 @@ export async function getAdminOrderById(branchSlug: string, orderId: string): Pr
   const supabase = createSupabaseAdminClient()
   const { data: order, error: orderError } = await supabase
     .from("orders")
-    .select(
-      "id, branch_id, customer_name, customer_email, customer_phone, fulfillment_type, currency, status, subtotal_usd, subtotal_ves, notes, created_at, updated_at",
-    )
+    .select(selectOrderDetailFields())
     .eq("branch_id", branchSlug)
     .eq("id", orderId)
     .maybeSingle()
@@ -138,6 +171,127 @@ export async function getAdminOrderById(branchSlug: string, orderId: string): Pr
       lineTotalVes: item.line_total_ves,
     })),
   }
+}
+
+export async function listIntegrationOrdersByBranch(branchSlug: string): Promise<IntegrationOrderListItem[]> {
+  const supabase = createSupabaseAdminClient()
+  const { data, error } = await supabase
+    .from("orders")
+    .select(selectOrderListFields())
+    .eq("branch_id", branchSlug)
+    .eq("status", "submitted")
+    .eq("pago_validado", true)
+    .eq("pos_facturado", false)
+    .order("created_at", { ascending: true })
+
+  if (error) {
+    throw error
+  }
+
+  return data.map(mapAdminOrder)
+}
+
+export async function getIntegrationOrderById(
+  branchSlug: string,
+  orderId: string,
+): Promise<IntegrationOrderDetail | null> {
+  const order = await getAdminOrderById(branchSlug, orderId)
+
+  if (!order || order.status !== "submitted" || !order.pagoValidado) {
+    return null
+  }
+
+  return order
+}
+
+export async function markOrderAsPosInvoiced({
+  branchSlug,
+  orderId,
+  posReference,
+  facturadoAt,
+}: {
+  branchSlug: string
+  orderId: string
+  posReference: string
+  facturadoAt: string
+}) {
+  const supabase = createSupabaseAdminClient()
+  const { data, error } = await supabase
+    .from("orders")
+    .update({
+      pos_facturado: true,
+      pos_facturado_at: facturadoAt,
+      pos_reference: posReference.trim(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("branch_id", branchSlug)
+    .eq("id", orderId)
+    .eq("status", "submitted")
+    .eq("pago_validado", true)
+    .eq("pos_facturado", false)
+    .select(selectOrderListFields())
+    .maybeSingle()
+
+  if (error) {
+    throw error
+  }
+
+  if (!data) {
+    const existing = await getAdminOrderById(branchSlug, orderId)
+
+    if (existing?.posFacturado) {
+      throw new OrderAlreadyInvoicedError()
+    }
+
+    return null
+  }
+
+  return mapAdminOrder(data)
+}
+
+export async function markOrderPaymentValidated({
+  orderId,
+  paymentReference,
+  paymentValidatedAt,
+}: {
+  orderId: string
+  paymentReference: string
+  paymentValidatedAt: string
+}) {
+  const supabase = createSupabaseAdminClient()
+  const { data, error } = await supabase
+    .from("orders")
+    .update({
+      pago_validado: true,
+      payment_reference: paymentReference.trim(),
+      payment_validated_at: paymentValidatedAt,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", orderId)
+    .eq("status", "submitted")
+    .eq("pago_validado", false)
+    .select(selectOrderListFields())
+    .maybeSingle()
+
+  if (error) {
+    throw error
+  }
+
+  if (data) {
+    return mapAdminOrder(data)
+  }
+
+  const { data: existing, error: existingError } = await supabase
+    .from("orders")
+    .select(selectOrderListFields())
+    .eq("id", orderId)
+    .maybeSingle()
+
+  if (existingError) {
+    throw existingError
+  }
+
+  return existing ? mapAdminOrder(existing) : null
 }
 
 export async function createSubmittedOrder({
@@ -212,6 +366,12 @@ export async function createSubmittedOrder({
       fulfillment_type: fulfillmentType,
       notes: notes.trim(),
       currency,
+      pago_validado: false,
+      payment_reference: null,
+      payment_validated_at: null,
+      pos_facturado: false,
+      pos_facturado_at: null,
+      pos_reference: null,
       subtotal_usd: subtotalUsd,
       subtotal_ves: subtotalVes,
       status: "submitted",

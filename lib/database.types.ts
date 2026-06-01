@@ -212,51 +212,69 @@ export type Database = {
           },
         ]
       }
-      orders: {
-        Row: {
-          branch_id: string
-          created_at: string
-          currency: "USD" | "VES"
-          customer_email: string
-          customer_name: string
-          customer_phone: string | null
-          fulfillment_type: "pickup" | "delivery"
-          id: string
-          notes: string
-          status: "draft" | "submitted" | "cancelled"
-          subtotal_usd: number
-          subtotal_ves: number
-          updated_at: string
-        }
-        Insert: {
-          branch_id: string
-          created_at?: string
-          currency: "USD" | "VES"
-          customer_email: string
-          customer_name: string
-          customer_phone?: string | null
-          fulfillment_type: "pickup" | "delivery"
-          id?: string
-          notes?: string
-          status?: "draft" | "submitted" | "cancelled"
-          subtotal_usd?: number
-          subtotal_ves?: number
-          updated_at?: string
-        }
-        Update: {
-          branch_id?: string
-          created_at?: string
-          currency?: "USD" | "VES"
-          customer_email?: string
-          customer_name?: string
-          customer_phone?: string | null
-          fulfillment_type?: "pickup" | "delivery"
-          id?: string
-          notes?: string
-          status?: "draft" | "submitted" | "cancelled"
-          subtotal_usd?: number
-          subtotal_ves?: number
-          updated_at?: string
+       orders: {
+         Row: {
+           branch_id: string
+           created_at: string
+           currency: "USD" | "VES"
+           customer_email: string
+           customer_name: string
+           customer_phone: string | null
+           fulfillment_type: "pickup" | "delivery"
+           id: string
+            pago_validado: boolean
+           notes: string
+            payment_reference: string | null
+            payment_validated_at: string | null
+            pos_facturado: boolean
+            pos_facturado_at: string | null
+            pos_reference: string | null
+           status: "draft" | "submitted" | "cancelled"
+           subtotal_usd: number
+           subtotal_ves: number
+           updated_at: string
+         }
+         Insert: {
+           branch_id: string
+           created_at?: string
+           currency: "USD" | "VES"
+           customer_email: string
+           customer_name: string
+           customer_phone?: string | null
+           fulfillment_type: "pickup" | "delivery"
+           id?: string
+            pago_validado?: boolean
+           notes?: string
+            payment_reference?: string | null
+            payment_validated_at?: string | null
+            pos_facturado?: boolean
+            pos_facturado_at?: string | null
+            pos_reference?: string | null
+           status?: "draft" | "submitted" | "cancelled"
+           subtotal_usd?: number
+           subtotal_ves?: number
+           updated_at?: string
+         }
+         Update: {
+           branch_id?: string
+           created_at?: string
+           currency?: "USD" | "VES"
+           customer_email?: string
+           customer_name?: string
+           customer_phone?: string | null
+           fulfillment_type?: "pickup" | "delivery"
+           id?: string
+            pago_validado?: boolean
+           notes?: string
+            payment_reference?: string | null
+            payment_validated_at?: string | null
+            pos_facturado?: boolean
+            pos_facturado_at?: string | null
+            pos_reference?: string | null
+           status?: "draft" | "submitted" | "cancelled"
+           subtotal_usd?: number
+           subtotal_ves?: number
+           updated_at?: string
         }
         Relationships: [
           {

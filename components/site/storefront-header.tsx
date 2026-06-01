@@ -58,10 +58,10 @@ export function StorefrontHeader({ branchSlug }: StorefrontHeaderProps) {
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-zinc-200/80 bg-white/92 px-4 py-3 shadow-[0_-18px_40px_rgba(24,24,27,0.08)] backdrop-blur md:hidden dark:border-zinc-800/80 dark:bg-zinc-950/92">
         <div className="mx-auto flex max-w-md items-center justify-center gap-3">
           <div className="flex-1">
-            <ShoppingBagSheet branchSlug={branchSlug} />
+            <ProfileMenu />
           </div>
           <div className="flex-1">
-            <ProfileMenu />
+            <ShoppingBagSheet branchSlug={branchSlug} />
           </div>
         </div>
       </div>
