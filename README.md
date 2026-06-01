@@ -12,6 +12,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 INTEGRATION_API_KEY=
 INTEGRATION_HMAC_SECRET=
+PAYMENT_VALIDATION_API_KEY=
 ```
 
 ## Desarrollo
@@ -62,4 +63,24 @@ La migración inicial crea `public.products` con:
 
 ```bash
 npm run lint
+```
+
+## Pruebas De Integracion
+
+Swagger UI:
+
+```bash
+http://localhost:3000/integration-api
+```
+
+Cliente CLI firmado para `/api/integration/*`:
+
+```bash
+npm run integration:request -- GET /api/integration/health
+```
+
+Marcar un pedido como pago validado para pruebas internas:
+
+```bash
+npm run payment:validate:test -- <ORDER_ID>
 ```

@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "integration:request": "node scripts/integration-request.mjs",
+    "payment:validate:test": "node scripts/payment-validation-request.mjs",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status",
