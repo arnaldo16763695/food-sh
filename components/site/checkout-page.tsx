@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { useEffect } from "react"
 import { useMemo, useState, useTransition } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -13,20 +14,35 @@ import { calculateBagTotals, useShoppingBagStore } from "@/lib/shopping-bag"
 type CheckoutPageProps = {
   branch: Branch
   availability: BranchAvailability
+  customerEmail: string
+  customerName: string
+  customerPhone: string
+  customerUserId: string
 }
 
 type OrderCurrency = "USD" | "VES"
 
-export function CheckoutPage({ branch, availability }: CheckoutPageProps) {
+export function CheckoutPage({
+  branch,
+  availability,
+  customerEmail,
+  customerName: initialCustomerName,
+  customerPhone: initialCustomerPhone,
+  customerUserId,
+}: CheckoutPageProps) {
   const bagBranchSlug = useShoppingBagStore((state) => state.branchSlug)
   const items = useShoppingBagStore((state) => state.items)
   const clear = useShoppingBagStore((state) => state.clear)
+  const syncCustomer = useShoppingBagStore((state) => state.syncCustomer)
   const totals = calculateBagTotals(items)
   const isCurrentBranch = !bagBranchSlug || bagBranchSlug === branch.slug
 
-  const [customerName, setCustomerName] = useState("")
-  const [customerEmail, setCustomerEmail] = useState("")
-  const [customerPhone, setCustomerPhone] = useState("")
+  useEffect(() => {
+    syncCustomer(customerUserId)
+  }, [customerUserId, syncCustomer])
+
+  const [customerName, setCustomerName] = useState(initialCustomerName)
+  const [customerPhone, setCustomerPhone] = useState(initialCustomerPhone)
   const [fulfillmentType, setFulfillmentType] = useState<"pickup" | "delivery">("pickup")
   const [currency, setCurrency] = useState<OrderCurrency>("USD")
   const [notes, setNotes] = useState("")
@@ -57,7 +73,6 @@ export function CheckoutPage({ branch, availability }: CheckoutPageProps) {
         },
         body: JSON.stringify({
           customerName,
-          customerEmail,
           customerPhone,
           fulfillmentType,
           currency,
@@ -154,11 +169,11 @@ export function CheckoutPage({ branch, availability }: CheckoutPageProps) {
                 </label>
                 <label className="grid gap-2">
                   <span className="text-sm font-medium">Correo</span>
-                  <Input type="email" value={customerEmail} onChange={(event) => setCustomerEmail(event.target.value)} required />
+                  <Input type="email" value={customerEmail} readOnly disabled />
                 </label>
                 <label className="grid gap-2">
                   <span className="text-sm font-medium">Teléfono</span>
-                  <Input value={customerPhone} onChange={(event) => setCustomerPhone(event.target.value)} />
+                  <Input value={customerPhone} onChange={(event) => setCustomerPhone(event.target.value)} required />
                 </label>
                 <label className="grid gap-2">
                   <span className="text-sm font-medium">Tipo de entrega</span>

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 
+import { getCustomerAccessState } from "@/lib/customer-auth"
 import { createSubmittedOrder } from "@/lib/orders"
 
 type RouteContext = {
@@ -14,6 +15,20 @@ export const runtime = "nodejs"
 
 export async function POST(request: NextRequest, { params }: RouteContext) {
   const { branchSlug } = await params
+  const access = await getCustomerAccessState()
+
+  if (access.status === "guest") {
+    return NextResponse.json({ error: "Debes iniciar sesión para continuar." }, { status: 401 })
+  }
+
+  if (access.status === "unconfirmed") {
+    return NextResponse.json({ error: "Debes confirmar tu correo antes de continuar." }, { status: 403 })
+  }
+
+  if (access.status === "needs-profile") {
+    return NextResponse.json({ error: "Completa tu perfil antes de continuar." }, { status: 403 })
+  }
+
   const body = (await request.json()) as unknown
 
   if (!isRecord(body)) {
@@ -24,7 +39,6 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
   if (
     typeof body.customerName !== "string" ||
-    typeof body.customerEmail !== "string" ||
     typeof body.customerPhone !== "string" ||
     typeof body.fulfillmentType !== "string" ||
     typeof body.notes !== "string" ||
@@ -37,8 +51,9 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   try {
     const order = await createSubmittedOrder({
       branchSlug,
+      customerUserId: access.user.id,
       customerName: body.customerName,
-      customerEmail: body.customerEmail,
+      customerEmail: access.user.email ?? "",
       customerPhone: body.customerPhone,
       fulfillmentType: body.fulfillmentType === "delivery" ? "delivery" : "pickup",
       notes: body.notes,

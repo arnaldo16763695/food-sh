@@ -95,6 +95,28 @@ function mapAdminOrder(order: {
 export type IntegrationOrderListItem = AdminOrderListItem
 export type IntegrationOrderDetail = AdminOrderDetail
 
+export type CustomerOrderListItem = Pick<
+  AdminOrderListItem,
+  | "id"
+  | "branchSlug"
+  | "currency"
+  | "customerEmail"
+  | "customerName"
+  | "customerPhone"
+  | "createdAt"
+  | "fulfillmentType"
+  | "pagoValidado"
+  | "paymentReference"
+  | "paymentValidatedAt"
+  | "posFacturado"
+  | "posFacturadoAt"
+  | "posReference"
+  | "status"
+  | "subtotalUsd"
+  | "subtotalVes"
+  | "updatedAt"
+>
+
 export class OrderAlreadyInvoicedError extends Error {
   constructor() {
     super("Order already invoiced in POS.")
@@ -113,6 +135,21 @@ export async function listAdminOrdersByBranch(branchSlug: string): Promise<Admin
     .from("orders")
     .select(ORDER_LIST_FIELDS)
     .eq("branch_id", branchSlug)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    throw error
+  }
+
+  return data.map(mapAdminOrder)
+}
+
+export async function listCustomerOrders(userId: string): Promise<CustomerOrderListItem[]> {
+  const supabase = createSupabaseAdminClient()
+  const { data, error } = await supabase
+    .from("orders")
+    .select(ORDER_LIST_FIELDS)
+    .eq("customer_user_id", userId)
     .order("created_at", { ascending: false })
 
   if (error) {
@@ -293,6 +330,7 @@ export async function markOrderPaymentValidated({
 
 export async function createSubmittedOrder({
   branchSlug,
+  customerUserId,
   customerName,
   customerEmail,
   customerPhone,
@@ -302,6 +340,7 @@ export async function createSubmittedOrder({
   items,
 }: {
   branchSlug: string
+  customerUserId: string
   customerName: string
   customerEmail: string
   customerPhone: string
@@ -357,6 +396,7 @@ export async function createSubmittedOrder({
     .from("orders")
     .insert({
       branch_id: branchSlug,
+      customer_user_id: customerUserId,
       customer_name: customerName.trim(),
       customer_email: customerEmail.trim(),
       customer_phone: customerPhone.trim() || null,

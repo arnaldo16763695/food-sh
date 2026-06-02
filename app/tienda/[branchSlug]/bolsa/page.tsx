@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 
 import { ShoppingBagPage } from "@/components/site/shopping-bag-page"
 import { getPublicBranchBySlug } from "@/lib/branches"
+import { requireReadyCustomerAccess } from "@/lib/customer-auth"
 
 type ShoppingBagRouteProps = {
   params: Promise<{ branchSlug: string }>
@@ -25,5 +26,7 @@ export default async function ShoppingBagRoute({ params }: ShoppingBagRouteProps
     notFound()
   }
 
-  return <ShoppingBagPage branch={branch} />
+  const access = await requireReadyCustomerAccess(`/tienda/${branch.slug}/bolsa`)
+
+  return <ShoppingBagPage branch={branch} customerUserId={access.user.id} />
 }

@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { useEffect } from "react"
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -10,16 +11,22 @@ import { calculateBagTotals, useShoppingBagStore } from "@/lib/shopping-bag"
 
 type ShoppingBagPageProps = {
   branch: Branch
+  customerUserId: string
 }
 
-export function ShoppingBagPage({ branch }: ShoppingBagPageProps) {
+export function ShoppingBagPage({ branch, customerUserId }: ShoppingBagPageProps) {
   const bagBranchSlug = useShoppingBagStore((state) => state.branchSlug)
   const items = useShoppingBagStore((state) => state.items)
   const removeItem = useShoppingBagStore((state) => state.removeItem)
   const setQuantity = useShoppingBagStore((state) => state.setQuantity)
   const clear = useShoppingBagStore((state) => state.clear)
+  const syncCustomer = useShoppingBagStore((state) => state.syncCustomer)
   const totals = calculateBagTotals(items)
   const isCurrentBranch = !bagBranchSlug || bagBranchSlug === branch.slug
+
+  useEffect(() => {
+    syncCustomer(customerUserId)
+  }, [customerUserId, syncCustomer])
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,var(--brand-surface)_0%,#f5f1e8_40%,#fbfaf7_100%)] text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">

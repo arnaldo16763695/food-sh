@@ -146,6 +146,30 @@ export type Database = {
           },
         ]
       }
+      customer_profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          phone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string
+          phone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          phone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string
@@ -212,13 +236,14 @@ export type Database = {
           },
         ]
       }
-       orders: {
-         Row: {
-           branch_id: string
-           created_at: string
-           currency: "USD" | "VES"
-           customer_email: string
-           customer_name: string
+        orders: {
+          Row: {
+            branch_id: string
+            created_at: string
+            customer_user_id: string | null
+            currency: "USD" | "VES"
+            customer_email: string
+            customer_name: string
            customer_phone: string | null
            fulfillment_type: "pickup" | "delivery"
            id: string
@@ -234,12 +259,13 @@ export type Database = {
            subtotal_ves: number
            updated_at: string
          }
-         Insert: {
-           branch_id: string
-           created_at?: string
-           currency: "USD" | "VES"
-           customer_email: string
-           customer_name: string
+          Insert: {
+            branch_id: string
+            created_at?: string
+            customer_user_id?: string | null
+            currency: "USD" | "VES"
+            customer_email: string
+            customer_name: string
            customer_phone?: string | null
            fulfillment_type: "pickup" | "delivery"
            id?: string
@@ -255,12 +281,13 @@ export type Database = {
            subtotal_ves?: number
            updated_at?: string
          }
-         Update: {
-           branch_id?: string
-           created_at?: string
-           currency?: "USD" | "VES"
-           customer_email?: string
-           customer_name?: string
+          Update: {
+            branch_id?: string
+            created_at?: string
+            customer_user_id?: string | null
+            currency?: "USD" | "VES"
+            customer_email?: string
+            customer_name?: string
            customer_phone?: string | null
            fulfillment_type?: "pickup" | "delivery"
            id?: string
@@ -276,12 +303,19 @@ export type Database = {
            subtotal_ves?: number
            updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "orders_branch_id_fkey"
-            columns: ["branch_id"]
-            isOneToOne: false
-            referencedRelation: "branches"
+         Relationships: [
+           {
+             foreignKeyName: "orders_customer_user_id_fkey"
+             columns: ["customer_user_id"]
+             isOneToOne: false
+             referencedRelation: "customer_profiles"
+             referencedColumns: ["user_id"]
+           },
+           {
+             foreignKeyName: "orders_branch_id_fkey"
+             columns: ["branch_id"]
+             isOneToOne: false
+             referencedRelation: "branches"
             referencedColumns: ["slug"]
           },
         ]

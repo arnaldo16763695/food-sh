@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -17,13 +18,18 @@ import { type CatalogProduct } from "@/lib/catalog-types"
 import { useShoppingBagStore } from "@/lib/shopping-bag"
 
 type AddToBagButtonProps = {
+  authUrl: string
   branchSlug: string
+  canAddToBag: boolean
+  customerUserId: string | null
   product: CatalogProduct
 }
 
-export function AddToBagButton({ branchSlug, product }: AddToBagButtonProps) {
+export function AddToBagButton({ authUrl, branchSlug, canAddToBag, customerUserId, product }: AddToBagButtonProps) {
+  const router = useRouter()
   const addItem = useShoppingBagStore((state) => state.addItem)
   const forceStartBranch = useShoppingBagStore((state) => state.forceStartBranch)
+  const syncCustomer = useShoppingBagStore((state) => state.syncCustomer)
   const [open, setOpen] = useState(false)
   const [note, setNote] = useState("")
   const [exclusionsText, setExclusionsText] = useState("")
@@ -48,6 +54,21 @@ export function AddToBagButton({ branchSlug, product }: AddToBagButtonProps) {
   function resetForm() {
     setNote("")
     setExclusionsText("")
+  }
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (nextOpen && !canAddToBag) {
+      router.push(authUrl)
+      return
+    }
+
+    if (nextOpen) {
+      if (customerUserId) {
+        syncCustomer(customerUserId)
+      }
+    }
+
+    setOpen(nextOpen)
   }
 
   function handleConfirm() {
@@ -92,10 +113,23 @@ export function AddToBagButton({ branchSlug, product }: AddToBagButtonProps) {
   }
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
         <Button
           type="button"
+          onClick={(event) => {
+            event.preventDefault()
+            if (!canAddToBag) {
+              router.push(authUrl)
+              return
+            }
+
+            if (customerUserId) {
+              syncCustomer(customerUserId)
+            }
+
+            setOpen(true)
+          }}
           className="h-11 w-full rounded-full"
           style={{
             backgroundColor: "var(--brand-primary)",

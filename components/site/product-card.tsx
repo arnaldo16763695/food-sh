@@ -4,11 +4,14 @@ import { AddToBagButton } from "@/components/site/add-to-bag-button"
 import { type CatalogProduct } from "@/lib/catalog-types"
 
 type ProductCardProps = {
+  authUrl: string
   branchSlug: string
+  canAddToBag: boolean
+  customerUserId: string | null
   product: CatalogProduct
 }
 
-export function ProductCard({ branchSlug, product }: ProductCardProps) {
+export function ProductCard({ authUrl, branchSlug, canAddToBag, customerUserId, product }: ProductCardProps) {
   const hasImage = Boolean(product.imageUrl)
 
   return (
@@ -83,7 +86,13 @@ export function ProductCard({ branchSlug, product }: ProductCardProps) {
         </div>
 
         <div className="pt-1">
-          <AddToBagButton branchSlug={branchSlug} product={product} />
+          <AddToBagButton
+            authUrl={authUrl}
+            branchSlug={branchSlug}
+            canAddToBag={canAddToBag}
+            customerUserId={customerUserId}
+            product={product}
+          />
         </div>
       </div>
     </article>

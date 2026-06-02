@@ -19,17 +19,25 @@ import { calculateBagTotals, useShoppingBagStore } from "@/lib/shopping-bag"
 
 type ShoppingBagSheetProps = {
   branchSlug: string
+  customerUserId: string | null
 }
 
-export function ShoppingBagSheet({ branchSlug }: ShoppingBagSheetProps) {
+export function ShoppingBagSheet({ branchSlug, customerUserId }: ShoppingBagSheetProps) {
   const bagBranchSlug = useShoppingBagStore((state) => state.branchSlug)
   const items = useShoppingBagStore((state) => state.items)
   const removeItem = useShoppingBagStore((state) => state.removeItem)
   const setQuantity = useShoppingBagStore((state) => state.setQuantity)
   const clear = useShoppingBagStore((state) => state.clear)
+  const syncCustomer = useShoppingBagStore((state) => state.syncCustomer)
   const totals = calculateBagTotals(items)
   const isCurrentBranch = !bagBranchSlug || bagBranchSlug === branchSlug
   const [isAnimating, setIsAnimating] = useState(false)
+
+  useEffect(() => {
+    if (customerUserId) {
+      syncCustomer(customerUserId)
+    }
+  }, [customerUserId, syncCustomer])
 
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout> | null = null

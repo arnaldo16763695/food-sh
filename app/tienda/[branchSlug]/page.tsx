@@ -6,6 +6,7 @@ import { StorefrontHeader } from "@/components/site/storefront-header"
 import { StorefrontHero } from "@/components/site/storefront-hero"
 import { getPublicBranchBySlug, listPublicBranches } from "@/lib/branches"
 import { listPublicProductsByBranch } from "@/lib/catalog-store"
+import { buildCustomerAuthUrl, getCustomerAccessState } from "@/lib/customer-auth"
 
 type BranchStorePageProps = {
   params: Promise<{ branchSlug: string }>
@@ -75,11 +76,34 @@ export default async function BranchStorePage({ params }: BranchStorePageProps) 
   }))
 
   const currentProducts = currentBranch.ok ? currentBranch.products : []
+  const customerAccessState = await getCustomerAccessState()
+  const authUrl = buildCustomerAuthUrl(
+    `/tienda/${selectedBranch.slug}`,
+    customerAccessState.status === "guest"
+      ? "auth-required"
+      : customerAccessState.status === "unconfirmed"
+        ? "email-not-confirmed"
+        : customerAccessState.status === "needs-profile"
+          ? "profile-incomplete"
+          : undefined,
+  )
+  const customerAccess = {
+    accountUrl: "/tienda/cuenta",
+    authUrl,
+    email: customerAccessState.user?.email ?? null,
+    fullName:
+      customerAccessState.profile?.fullName ??
+      (typeof customerAccessState.user?.user_metadata?.full_name === "string"
+        ? customerAccessState.user.user_metadata.full_name
+        : null),
+    status: customerAccessState.status,
+    userId: customerAccessState.user?.id ?? null,
+  }
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,var(--brand-surface)_0%,#f5f1e8_40%,#fbfaf7_100%)] text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
       <div className="mx-auto flex w-full max-w-7xl flex-col px-5 pb-14 pt-5 sm:px-6 lg:px-10">
-        <StorefrontHeader branchSlug={selectedBranch.slug} />
+        <StorefrontHeader branchSlug={selectedBranch.slug} customerAccess={customerAccess} />
 
         <StorefrontHero
           selectedBranchSlug={selectedBranch.slug}
@@ -102,7 +126,14 @@ export default async function BranchStorePage({ params }: BranchStorePageProps) 
             currentProducts.length > 0 ? (
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {currentProducts.map((product) => (
-                  <ProductCard key={product.id} branchSlug={selectedBranch.slug} product={product} />
+                  <ProductCard
+                    key={product.id}
+                    authUrl={authUrl}
+                    branchSlug={selectedBranch.slug}
+                    canAddToBag={customerAccess.status === "ready"}
+                    customerUserId={customerAccess.userId}
+                    product={product}
+                  />
                 ))}
               </div>
             ) : (

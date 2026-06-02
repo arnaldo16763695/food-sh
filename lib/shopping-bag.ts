@@ -24,7 +24,9 @@ type AddItemResult =
 
 type ShoppingBagState = {
   branchSlug: string | null
+  customerUserId: string | null
   items: ShoppingBagItem[]
+  syncCustomer: (customerUserId: string) => void
   addItem: (item: AddItemInput) => AddItemResult
   forceStartBranch: (branchSlug: string) => void
   removeItem: (itemId: string) => void
@@ -34,6 +36,7 @@ type ShoppingBagState = {
 
 type PersistedShoppingBagState = {
   branchSlug: string | null
+  customerUserId: string | null
   items: Array<Partial<ShoppingBagItem> & { id: string }>
 }
 
@@ -98,7 +101,35 @@ export const useShoppingBagStore = create<ShoppingBagState>()(
   persist(
     (set, get) => ({
       branchSlug: null,
+      customerUserId: null,
       items: [],
+      syncCustomer: (customerUserId) => {
+        const state = get()
+
+        if (state.customerUserId === customerUserId) {
+          return
+        }
+
+        if (!state.customerUserId) {
+          if (state.items.length === 0) {
+            set({ customerUserId })
+            return
+          }
+
+          set({
+            customerUserId,
+            branchSlug: null,
+            items: [],
+          })
+          return
+        }
+
+        set({
+          customerUserId,
+          branchSlug: null,
+          items: [],
+        })
+      },
       addItem: (item) => {
         const state = get()
 
@@ -146,6 +177,7 @@ export const useShoppingBagStore = create<ShoppingBagState>()(
         const nextItems = get().items.filter((item) => item.id !== itemId)
         set({
           branchSlug: nextItems.length > 0 ? get().branchSlug : null,
+          customerUserId: get().customerUserId,
           items: nextItems,
         })
       },
@@ -161,7 +193,7 @@ export const useShoppingBagStore = create<ShoppingBagState>()(
           ),
         })
       },
-      clear: () => set({ branchSlug: null, items: [] }),
+      clear: () => set({ branchSlug: null, customerUserId: null, items: [] }),
     }),
     {
       name: "shopping-bag-store",
@@ -177,6 +209,7 @@ export const useShoppingBagStore = create<ShoppingBagState>()(
           ...currentState,
           ...state,
           branchSlug: state.branchSlug ?? null,
+          customerUserId: state.customerUserId ?? null,
           items: Array.isArray(state.items) ? state.items.map(normalizeShoppingBagItem) : [],
         }
       },

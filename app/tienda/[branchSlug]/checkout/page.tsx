@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { CheckoutPage } from "@/components/site/checkout-page"
 import { getPublicBranchAvailability } from "@/lib/branch-hours"
 import { getPublicBranchBySlug } from "@/lib/branches"
+import { requireReadyCustomerAccess } from "@/lib/customer-auth"
 
 type CheckoutRouteProps = {
   params: Promise<{ branchSlug: string }>
@@ -27,6 +28,16 @@ export default async function CheckoutRoute({ params }: CheckoutRouteProps) {
   }
 
   const availability = await getPublicBranchAvailability(branch.slug)
+  const access = await requireReadyCustomerAccess(`/tienda/${branch.slug}/checkout`)
 
-  return <CheckoutPage branch={branch} availability={availability} />
+  return (
+    <CheckoutPage
+      availability={availability}
+      branch={branch}
+      customerEmail={access.user.email ?? ""}
+      customerName={access.profile.fullName}
+      customerPhone={access.profile.phone}
+      customerUserId={access.user.id}
+    />
+  )
 }
