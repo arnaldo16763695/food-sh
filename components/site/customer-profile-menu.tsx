@@ -7,6 +7,7 @@ import { useState } from "react"
 
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser"
 import { useShoppingBagStore } from "@/lib/shopping-bag"
+import { StorefrontThemeToggle } from "@/components/site/storefront-theme-toggle"
 
 type CustomerProfileMenuProps = {
   accountUrl: string
@@ -70,6 +71,7 @@ export function CustomerProfileMenu({ accountUrl, authUrl, branchSlug, email, fu
           </div>
         ) : null}
         <div className="mt-1 grid gap-1">
+          <StorefrontThemeToggle />
           {status === "ready" ? (
             <Link
               href={accountUrl}

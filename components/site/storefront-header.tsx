@@ -4,6 +4,7 @@ import { ChevronDown, User } from "lucide-react"
 import { BrandLogo } from "@/components/site/brand-logo"
 import { CustomerProfileMenu } from "@/components/site/customer-profile-menu"
 import { ShoppingBagSheet } from "@/components/site/shopping-bag-sheet"
+import { StorefrontThemeToggle } from "@/components/site/storefront-theme-toggle"
 
 type StorefrontHeaderProps = {
   customerAccess: {
@@ -30,6 +31,7 @@ function GuestProfileMenu({ authUrl }: { authUrl: string }) {
           Crea tu cuenta o inicia sesión para agregar productos a la bolsa y continuar al checkout.
         </div>
         <div className="mt-1 grid gap-1">
+          <StorefrontThemeToggle />
           <Link
             href={authUrl}
             className="rounded-2xl px-4 py-3 text-left text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 hover:text-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-800 dark:hover:text-white"
