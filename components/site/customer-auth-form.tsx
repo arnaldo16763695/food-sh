@@ -18,10 +18,6 @@ type CustomerAuthFormProps = {
   status: "guest" | "unconfirmed" | "needs-profile"
 }
 
-function buildRedirectUrl(pathname: string, nextPath: string) {
-  return `${window.location.origin}${pathname}?next=${encodeURIComponent(nextPath)}`
-}
-
 export function CustomerAuthForm({
   initialEmail,
   initialFullName,
@@ -39,9 +35,47 @@ export function CustomerAuthForm({
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [resendMessage, setResendMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const [isResending, setIsResending] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
+
+  async function handleResendNotification() {
+    setError(null)
+    setResendMessage(null)
+    setIsResending(true)
+
+    try {
+      const response = await fetch("/api/customer-auth/resend-confirmation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          nextPath,
+        }),
+      })
+
+      const result = (await response.json()) as { data?: { deliveryMethod: "console" | "resend" }; error?: string }
+
+      if (!response.ok) {
+        setError(result.error ?? "No se pudo reenviar la notificación.")
+        return
+      }
+
+      setResendMessage(
+        result.data?.deliveryMethod === "console"
+          ? "No hay Resend configurado. Imprimimos la URL de confirmación en la consola del servidor."
+          : "Te reenviamos la notificación al correo indicado.",
+      )
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "No se pudo reenviar la notificación.")
+    } finally {
+      setIsResending(false)
+    }
+  }
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -77,27 +111,34 @@ export function CustomerAuthForm({
     setIsSubmitting(true)
 
     try {
-      const supabase = createSupabaseBrowserClient()
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          data: {
-            full_name: fullName.trim(),
-            phone: phone.trim(),
-          },
-          emailRedirectTo: buildRedirectUrl("/auth/confirm", nextPath),
+      const response = await fetch("/api/customer-auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          email: email.trim(),
+          fullName: fullName.trim(),
+          nextPath,
+          password,
+          phone: phone.trim(),
+        }),
       })
 
-      if (signUpError) {
-        setError(signUpError.message)
+      const result = (await response.json()) as { data?: { deliveryMethod: "console" | "resend" }; error?: string }
+
+      if (!response.ok) {
+        setError(result.error ?? "No se pudo crear la cuenta.")
         return
       }
 
       setPassword("")
       setMode("login")
-      setMessage("Te enviamos un enlace para confirmar tu correo antes de continuar con la compra.")
+      setMessage(
+        result.data?.deliveryMethod === "console"
+          ? "No hay Resend configurado todavía. Imprimimos la URL de confirmación en la consola del servidor para esta prueba."
+          : "Te enviamos un enlace para confirmar tu correo antes de continuar con la compra.",
+      )
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "No se pudo crear la cuenta.")
     } finally {
@@ -115,7 +156,7 @@ export function CustomerAuthForm({
       const { error: googleError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: buildRedirectUrl("/auth/callback", nextPath),
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
         },
       })
 
@@ -199,9 +240,13 @@ export function CustomerAuthForm({
           Revisa tu correo y abre el enlace de confirmación antes de agregar productos a la bolsa.
         </div>
 
+        {resendMessage ? <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-500/10 dark:text-emerald-300">{resendMessage}</div> : null}
         {error ? <div className="rounded-3xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-500/10 dark:text-red-300">{error}</div> : null}
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Button type="button" variant="outline" onClick={handleResendNotification} disabled={isResending || !email.trim()}>
+            {isResending ? "Reenviando..." : "Reenviar notificación"}
+          </Button>
           <Button type="button" variant="outline" onClick={handleSignOut} disabled={isSigningOut}>
             {isSigningOut ? "Cerrando sesión..." : "Cerrar sesión"}
           </Button>
@@ -319,11 +364,19 @@ export function CustomerAuthForm({
         </label>
 
         {message ? <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-500/10 dark:text-emerald-300">{message}</div> : null}
+        {resendMessage ? <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-500/10 dark:text-emerald-300">{resendMessage}</div> : null}
         {error ? <div className="rounded-3xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-500/10 dark:text-red-300">{error}</div> : null}
 
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? (isSignup ? "Creando cuenta..." : "Ingresando...") : isSignup ? "Crear cuenta" : "Iniciar sesión"}
-        </Button>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (isSignup ? "Creando cuenta..." : "Ingresando...") : isSignup ? "Crear cuenta" : "Iniciar sesión"}
+          </Button>
+          {isSignup || message ? (
+            <Button type="button" variant="outline" onClick={handleResendNotification} disabled={isResending || !email.trim()}>
+              {isResending ? "Reenviando..." : "Reenviar notificación"}
+            </Button>
+          ) : null}
+        </div>
       </form>
     </div>
   )
