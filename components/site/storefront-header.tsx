@@ -3,6 +3,7 @@ import { ChevronDown, User } from "lucide-react"
 
 import { BrandLogo } from "@/components/site/brand-logo"
 import { CustomerProfileMenu } from "@/components/site/customer-profile-menu"
+import { ProfileMenuDetails } from "@/components/site/profile-menu-details"
 import { ShoppingBagSheet } from "@/components/site/shopping-bag-sheet"
 import { StorefrontThemeToggle } from "@/components/site/storefront-theme-toggle"
 
@@ -20,13 +21,13 @@ type StorefrontHeaderProps = {
 
 function GuestProfileMenu({ authUrl }: { authUrl: string }) {
   return (
-    <details className="group relative">
+    <ProfileMenuDetails className="group relative">
       <summary className="flex h-11 cursor-pointer list-none items-center gap-2 rounded-full border border-[color-mix(in_oklab,var(--brand-deep)_14%,white)] bg-white px-4 text-sm font-medium text-zinc-700 transition-colors hover:bg-(--brand-deep) hover:text-white dark:border-[color-mix(in_oklab,var(--brand-deep)_28%,black)] dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-(--brand-deep)">
         <User className="size-4" />
         <span>Mi perfil</span>
         <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
       </summary>
-      <div className="absolute right-0 bottom-full mb-3 w-56 rounded-3xl border border-zinc-200 bg-white p-2 shadow-[0_18px_40px_rgba(24,24,27,0.14)] md:top-full md:bottom-auto md:mt-3 md:mb-0 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="absolute left-0 bottom-full mb-3 w-56 max-w-[calc(100vw-2rem)] rounded-3xl border border-zinc-200 bg-white p-2 shadow-[0_18px_40px_rgba(24,24,27,0.14)] md:top-full md:right-0 md:left-auto md:bottom-auto md:mt-3 md:mb-0 dark:border-zinc-800 dark:bg-zinc-900">
         <div className="rounded-2xl px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
           Crea tu cuenta o inicia sesión para agregar productos a la bolsa y continuar al checkout.
         </div>
@@ -46,7 +47,7 @@ function GuestProfileMenu({ authUrl }: { authUrl: string }) {
           </Link>
         </div>
       </div>
-    </details>
+    </ProfileMenuDetails>
   )
 }
 

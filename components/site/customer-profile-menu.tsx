@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser"
+import { ProfileMenuDetails } from "@/components/site/profile-menu-details"
 import { useShoppingBagStore } from "@/lib/shopping-bag"
 import { StorefrontThemeToggle } from "@/components/site/storefront-theme-toggle"
 
@@ -53,13 +54,13 @@ export function CustomerProfileMenu({ accountUrl, authUrl, branchSlug, email, fu
   }
 
   return (
-    <details className="group relative">
+    <ProfileMenuDetails className="group relative">
       <summary className="flex h-11 cursor-pointer list-none items-center gap-2 rounded-full border border-[color-mix(in_oklab,var(--brand-deep)_14%,white)] bg-white px-4 text-sm font-medium text-zinc-700 transition-colors hover:bg-(--brand-deep) hover:text-white dark:border-[color-mix(in_oklab,var(--brand-deep)_28%,black)] dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-(--brand-deep)">
         <User className="size-4" />
         <span className="max-w-28 truncate">{fullName}</span>
         <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
       </summary>
-      <div className="absolute right-0 bottom-full mb-3 w-64 rounded-3xl border border-zinc-200 bg-white p-2 shadow-[0_18px_40px_rgba(24,24,27,0.14)] md:top-full md:bottom-auto md:mt-3 md:mb-0 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="absolute left-0 bottom-full mb-3 w-64 max-w-[calc(100vw-2rem)] rounded-3xl border border-zinc-200 bg-white p-2 shadow-[0_18px_40px_rgba(24,24,27,0.14)] md:top-full md:right-0 md:left-auto md:bottom-auto md:mt-3 md:mb-0 dark:border-zinc-800 dark:bg-zinc-900">
         <div className="rounded-2xl border border-zinc-200 px-4 py-3 text-sm dark:border-zinc-800">
           <p className="font-medium text-zinc-950 dark:text-zinc-50">{fullName}</p>
           <p className="mt-1 text-zinc-500 dark:text-zinc-400">{email}</p>
@@ -97,6 +98,6 @@ export function CustomerProfileMenu({ accountUrl, authUrl, branchSlug, email, fu
           </button>
         </div>
       </div>
-    </details>
+    </ProfileMenuDetails>
   )
 }
