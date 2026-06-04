@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 
 import { AdminLoginForm } from "@/components/admin/admin-login-form"
 import { BrandLogo } from "@/components/site/brand-logo"
-import { getAuthenticatedAdminUser } from "@/lib/admin-auth"
+import { getAdminProfile, getAuthenticatedAdminUser } from "@/lib/admin-auth"
 
 type AdminLoginPageProps = {
   searchParams: Promise<{ error?: string; next?: string }>
@@ -24,9 +24,11 @@ export default async function AdminLoginPage({ searchParams }: AdminLoginPagePro
   const user = await getAuthenticatedAdminUser()
   const resolvedSearchParams = await searchParams
   const nextPath = resolvedSearchParams.next ?? "/admin"
-  const errorMessage = resolvedSearchParams.error ? errorMessages[resolvedSearchParams.error] : null
+  const profile = user ? await getAdminProfile(user.id) : null
+  const errorKey = resolvedSearchParams.error ?? (user && !profile ? "no-admin-access" : undefined)
+  const errorMessage = errorKey ? errorMessages[errorKey] : null
 
-  if (user) {
+  if (user && profile) {
     redirect(nextPath)
   }
 
