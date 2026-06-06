@@ -32,6 +32,7 @@ export type BranchHour = {
   opensAt: string | null
   closesAt: string | null
   isClosed: boolean
+  isConfigured: boolean
 }
 
 const DEFAULT_WEEK_HOURS: BranchHour[] = Array.from({ length: 7 }, (_, weekday) => ({
@@ -40,6 +41,7 @@ const DEFAULT_WEEK_HOURS: BranchHour[] = Array.from({ length: 7 }, (_, weekday) 
   opensAt: "08:00",
   closesAt: "20:00",
   isClosed: false,
+  isConfigured: false,
 }))
 
 function isMissingBranchHoursTableError(error: { code?: string } | null) {
@@ -163,6 +165,7 @@ function mapBranchHour(row: BranchHourRow): BranchHour {
     opensAt: row.opens_at,
     closesAt: row.closes_at,
     isClosed: row.is_closed,
+    isConfigured: true,
   }
 }
 

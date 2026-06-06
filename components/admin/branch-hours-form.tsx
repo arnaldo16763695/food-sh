@@ -35,6 +35,7 @@ export function BranchHoursForm({ branch, initialHours }: BranchHoursFormProps) 
   const [onlineOrderMode, setOnlineOrderMode] = useState(branch.onlineOrderMode)
   const [onlineModeError, setOnlineModeError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const unconfiguredHours = hours.filter((hour) => !hour.isConfigured)
 
   function updateHour(weekday: number, patch: Partial<EditableHour>) {
     setHours((current) =>
@@ -65,6 +66,7 @@ export function BranchHoursForm({ branch, initialHours }: BranchHoursFormProps) 
         return
       }
 
+      updateHour(hour.weekday, { error: null, isConfigured: true })
       router.refresh()
     })
   }
@@ -94,6 +96,18 @@ export function BranchHoursForm({ branch, initialHours }: BranchHoursFormProps) 
 
   return (
     <div className="grid gap-4">
+      {unconfiguredHours.length > 0 ? (
+        <section className="rounded-4xl border border-amber-200 bg-amber-50 p-5 shadow-sm dark:border-amber-900/70 dark:bg-amber-950/40">
+          <h3 className="text-lg font-semibold text-amber-950 dark:text-amber-100">
+            Faltan días por guardar
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-amber-900 dark:text-amber-100">
+            Los horarios que ves en esos días son una sugerencia inicial de 08:00 a 20:00. La sucursal
+            seguirá figurando como cerrada en esos días hasta que guardes cada horario.
+          </p>
+        </section>
+      ) : null}
+
       <section className="rounded-4xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -132,12 +146,27 @@ export function BranchHoursForm({ branch, initialHours }: BranchHoursFormProps) 
         <article key={hour.weekday} className="rounded-4xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h3 className="text-lg font-semibold">{weekdayLabels[hour.weekday]}</h3>
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-lg font-semibold">{weekdayLabels[hour.weekday]}</h3>
+                <span
+                  className={hour.isConfigured
+                    ? "inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-100"
+                    : "inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-100"
+                  }
+                >
+                  {hour.isConfigured ? "Guardado" : "Pendiente de configuración"}
+                </span>
+              </div>
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
                 {hour.isClosed
                   ? "Sucursal cerrada este día."
                   : `Horario actual: ${hour.opensAt ?? "--:--"} - ${hour.closesAt ?? "--:--"}`}
               </p>
+              {!hour.isConfigured ? (
+                <p className="mt-2 text-sm text-amber-700 dark:text-amber-300">
+                  Este horario todavia no existe en la base de datos. Guarda este dia para activarlo.
+                </p>
+              ) : null}
             </div>
 
             <label className="inline-flex items-center gap-3 rounded-full border border-zinc-300 px-4 py-2 text-sm dark:border-zinc-700">
