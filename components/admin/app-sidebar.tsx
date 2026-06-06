@@ -7,6 +7,7 @@ import {
   ClipboardList,
   Command,
   GalleryVerticalEnd,
+  KeyRound,
   LayoutDashboard,
   Package2,
   PlugZap,
@@ -196,10 +197,36 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
 
 export function AppSidebar({ branchSlug, ...props }: AppSidebarProps) {
   const pathname = usePathname()
+  const usersUrl = "/admin/users"
 
   const navMain = React.useMemo(() => {
     if (!branchSlug) {
-      return data.navMain
+      return [
+        {
+          title: "Operación central",
+          url: "/admin",
+          icon: LayoutDashboard,
+          isActive: pathname === "/admin",
+          items: [
+            {
+              title: "Sucursales activas",
+              url: "/admin",
+            },
+          ],
+        },
+        {
+          title: "Usuarios del sistema",
+          url: usersUrl,
+          icon: KeyRound,
+          isActive: pathname.startsWith("/admin/users"),
+          items: [
+            {
+              title: "Perfiles y permisos",
+              url: usersUrl,
+            },
+          ],
+        },
+      ]
     }
 
     return [
@@ -235,6 +262,15 @@ export function AppSidebar({ branchSlug, ...props }: AppSidebarProps) {
         ],
       },
       {
+        title: "Usuarios del sistema",
+        url: usersUrl,
+        icon: KeyRound,
+        isActive: pathname.startsWith("/admin/users"),
+        items: [
+          { title: "Perfiles y permisos", url: usersUrl },
+        ],
+      },
+      {
         title: "Sucursales y horarios",
         url: `/admin/${branchSlug}/settings`,
         icon: Store,
@@ -262,7 +298,7 @@ export function AppSidebar({ branchSlug, ...props }: AppSidebarProps) {
         ],
       },
     ]
-  }, [branchSlug, pathname])
+  }, [branchSlug, pathname, usersUrl])
 
   const quickLinks = React.useMemo(() => {
     if (!branchSlug) {

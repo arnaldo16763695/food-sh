@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 
 const errorMessages: Record<string, string> = {
   "branch-access": "Tu usuario no tiene permiso para acceder a esa sucursal.",
+  "confirmation-link": "El enlace de acceso no es válido o ya expiró. Solicita uno nuevo al administrador.",
   "no-admin-access": "Tu usuario no tiene perfil administrativo asignado.",
 }
 

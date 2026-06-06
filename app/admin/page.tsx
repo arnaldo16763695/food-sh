@@ -20,14 +20,27 @@ export default async function AdminPage() {
     <main className="min-h-screen bg-zinc-50 px-6 py-10 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 sm:px-8 lg:px-10">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
         <header className="rounded-4xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-          <p className="text-sm font-medium tracking-[0.16em] text-zinc-500 uppercase dark:text-zinc-400">
-            Administración
-          </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight">Selecciona una sucursal</h1>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-600 dark:text-zinc-400">
-            El panel administrativo se segmenta por sucursal dentro de una sola empresa. Elige la
-            sucursal para entrar al dashboard correspondiente.
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium tracking-[0.16em] text-zinc-500 uppercase dark:text-zinc-400">
+                Administración
+              </p>
+              <h1 className="mt-3 text-4xl font-semibold tracking-tight">Selecciona una sucursal</h1>
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-600 dark:text-zinc-400">
+                El panel administrativo se segmenta por sucursal dentro de una sola empresa. Elige la
+                sucursal para entrar al dashboard correspondiente.
+              </p>
+            </div>
+
+            {profile.isSuperadmin ? (
+              <Link
+                href="/admin/users"
+                className="inline-flex h-11 items-center justify-center rounded-full border border-zinc-300 px-5 text-sm font-medium transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+              >
+                Gestionar usuarios
+              </Link>
+            ) : null}
+          </div>
         </header>
 
         {branches.length > 0 ? (

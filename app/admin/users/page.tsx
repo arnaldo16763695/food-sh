@@ -1,0 +1,59 @@
+import type { Metadata } from "next"
+import { cookies } from "next/headers"
+
+import { AdminShell } from "@/components/admin/admin-shell"
+import { AdminUsersTable } from "@/components/admin/admin-users-table"
+import { listAccessibleAdminBranches, requireSuperadminSession } from "@/lib/admin-auth"
+import { listAdminUsers } from "@/lib/admin-users"
+import { listPublicBranches } from "@/lib/branches"
+
+export const metadata: Metadata = {
+  title: "Usuarios Admin | Shanghaipf Commerce",
+  description: "Gestión de usuarios y permisos administrativos.",
+}
+
+export default async function AdminUsersPage() {
+  const [{ user }, cookieStore] = await Promise.all([
+    requireSuperadminSession("/admin/users"),
+    cookies(),
+  ])
+
+  const accessibleBranches = await listAccessibleAdminBranches(user.id)
+  const persistedBranchSlug = cookieStore.get("admin_context_branch")?.value
+  const currentBranch = persistedBranchSlug
+    ? accessibleBranches.find((branch) => branch.branchSlug === persistedBranchSlug)
+    : accessibleBranches[0]
+
+  const [users, branches] = await Promise.all([listAdminUsers(), listPublicBranches()])
+
+  return (
+    <AdminShell
+      branchSlug={currentBranch?.branchSlug}
+      currentLabel="Usuarios del sistema"
+      parentLabel={currentBranch?.branchTitle}
+      parentHref={currentBranch ? `/admin/${currentBranch.branchSlug}` : undefined}
+    >
+      <main className="flex flex-1 flex-col gap-6">
+        <header className="rounded-4xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <p className="text-sm font-medium tracking-[0.16em] text-zinc-500 uppercase dark:text-zinc-400">
+            Operación central
+          </p>
+          <h1 className="mt-3 text-4xl font-semibold tracking-tight">Usuarios del sistema</h1>
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-zinc-600 dark:text-zinc-400">
+            Crea usuarios administrativos, define si tendrán acceso total como superadmin o si
+            operarán sucursales específicas con perfil de encargado u operador.
+          </p>
+        </header>
+
+        <AdminUsersTable
+          branches={branches.map((branch) => ({
+            id: branch.id,
+            slug: branch.slug,
+            title: branch.title,
+          }))}
+          users={users}
+        />
+      </main>
+    </AdminShell>
+  )
+}

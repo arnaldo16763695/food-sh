@@ -161,3 +161,13 @@ export async function requireAdminBranchAccess(branchSlug: string) {
     user,
   }
 }
+
+export async function requireSuperadminSession(nextPath: string) {
+  const session = await requireAdminSession(nextPath)
+
+  if (!session.profile.isSuperadmin) {
+    redirect("/admin")
+  }
+
+  return session
+}
