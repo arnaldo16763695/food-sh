@@ -35,6 +35,8 @@ export type BranchHour = {
   isConfigured: boolean
 }
 
+type BranchHourInput = Omit<BranchHour, "isConfigured">
+
 const DEFAULT_WEEK_HOURS: BranchHour[] = Array.from({ length: 7 }, (_, weekday) => ({
   branchSlug: "",
   weekday,
@@ -239,7 +241,7 @@ export async function upsertAdminBranchHour({
   opensAt,
   closesAt,
   isClosed,
-}: BranchHour) {
+}: BranchHourInput) {
   const supabase = createSupabaseAdminClient()
   const timestamp = new Date().toISOString()
   const payload = {
