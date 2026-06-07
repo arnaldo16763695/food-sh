@@ -11,11 +11,18 @@ function formatDate(date: string | null) {
     return "Sin ingreso registrado"
   }
 
-  return new Intl.DateTimeFormat("es-VE", {
-    dateStyle: "medium",
-    timeStyle: "short",
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    hour: "2-digit",
+    hour12: true,
+    minute: "2-digit",
+    month: "2-digit",
     timeZone: "America/Caracas",
-  }).format(new Date(date))
+    year: "numeric",
+  }).formatToParts(new Date(date))
+
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? ""
+  return `${get("day")}/${get("month")}/${get("year")}, ${get("hour")}:${get("minute")} ${get("dayPeriod").toLowerCase()}`
 }
 
 export function AdminUsersTable({
