@@ -12,6 +12,8 @@ type DraftOrderItemInput = {
   exclusions: string[]
 }
 
+export type AdminOrderStatus = OrderStatus
+
 export type AdminOrderListItem = {
   id: string
   branchSlug: string
@@ -121,6 +123,13 @@ export class OrderAlreadyInvoicedError extends Error {
   constructor() {
     super("Order already invoiced in POS.")
     this.name = "OrderAlreadyInvoicedError"
+  }
+}
+
+export class OrderStatusTransitionError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "OrderStatusTransitionError"
   }
 }
 
@@ -326,6 +335,48 @@ export async function markOrderPaymentValidated({
   }
 
   return existing ? mapAdminOrder(existing) : null
+}
+
+export async function updateAdminOrderStatus({
+  branchSlug,
+  orderId,
+  status,
+}: {
+  branchSlug: string
+  orderId: string
+  status: Extract<OrderStatus, "submitted" | "cancelled">
+}) {
+  const existing = await getAdminOrderById(branchSlug, orderId)
+
+  if (!existing) {
+    return null
+  }
+
+  if (existing.posFacturado && status === "cancelled") {
+    throw new OrderStatusTransitionError("No se puede cancelar un pedido ya facturado en POS.")
+  }
+
+  if (existing.status === status) {
+    return existing
+  }
+
+  const supabase = createSupabaseAdminClient()
+  const { data, error } = await supabase
+    .from("orders")
+    .update({
+      status,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("branch_id", branchSlug)
+    .eq("id", orderId)
+    .select(ORDER_LIST_FIELDS)
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return mapAdminOrder(data)
 }
 
 export async function createSubmittedOrder({

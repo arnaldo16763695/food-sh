@@ -14,11 +14,18 @@ import {
 import { type AdminGlobalCustomerSummary } from "@/lib/admin-customers"
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat("es-VE", {
-    dateStyle: "medium",
-    timeStyle: "short",
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    hour: "2-digit",
+    hour12: true,
+    minute: "2-digit",
+    month: "2-digit",
     timeZone: "America/Caracas",
-  }).format(new Date(value))
+    year: "numeric",
+  }).formatToParts(new Date(value))
+
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? ""
+  return `${get("day")}/${get("month")}/${get("year")}, ${get("hour")}:${get("minute")} ${get("dayPeriod").toLowerCase()}`
 }
 
 function getOrderStatusLabel(order: {

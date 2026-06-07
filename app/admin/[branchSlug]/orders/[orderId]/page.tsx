@@ -2,12 +2,52 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
+import { AdminOrderActions } from "@/components/admin/admin-order-actions"
 import { requireAdminBranchAccess } from "@/lib/admin-auth"
 import { getPublicBranchBySlug } from "@/lib/branches"
 import { getAdminOrderById } from "@/lib/orders"
 
 type AdminOrderDetailPageProps = {
   params: Promise<{ branchSlug: string; orderId: string }>
+}
+
+function getOrderStatusLabel(order: {
+  pagoValidado: boolean
+  posFacturado: boolean
+  status: "draft" | "submitted" | "cancelled"
+}) {
+  if (order.status === "cancelled") {
+    return {
+      className: "text-red-700 dark:text-red-400",
+      label: "Cancelado",
+    }
+  }
+
+  if (order.posFacturado) {
+    return {
+      className: "text-emerald-700 dark:text-emerald-400",
+      label: "Facturado en POS",
+    }
+  }
+
+  if (order.pagoValidado) {
+    return {
+      className: "text-sky-700 dark:text-sky-400",
+      label: "Pago validado",
+    }
+  }
+
+  if (order.status === "submitted") {
+    return {
+      className: "text-amber-700 dark:text-amber-400",
+      label: "Recibido",
+    }
+  }
+
+  return {
+    className: "text-zinc-700 dark:text-zinc-300",
+    label: "Borrador",
+  }
 }
 
 export async function generateMetadata({ params }: AdminOrderDetailPageProps): Promise<Metadata> {
@@ -33,6 +73,8 @@ export default async function AdminOrderDetailPage({ params }: AdminOrderDetailP
   if (!order) {
     notFound()
   }
+
+  const statusLabel = getOrderStatusLabel(order)
 
   return (
     <main className="flex flex-1 flex-col gap-6">
@@ -80,7 +122,7 @@ export default async function AdminOrderDetailPage({ params }: AdminOrderDetailP
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div>
               <p className="text-xs uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">Estado</p>
-              <p className="mt-1 font-medium text-emerald-700 dark:text-emerald-400">{order.status}</p>
+              <p className={`mt-1 font-medium ${statusLabel.className}`}>{statusLabel.label}</p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">Fecha</p>
@@ -130,6 +172,8 @@ export default async function AdminOrderDetailPage({ params }: AdminOrderDetailP
           </div>
         </section>
       </div>
+
+      <AdminOrderActions branchSlug={branch.slug} order={order} />
     </main>
   )
 }

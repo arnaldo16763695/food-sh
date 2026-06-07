@@ -90,7 +90,7 @@ async function listAllAuthUsers() {
     const pageUsers = data.users.map((user) => ({
       email: user.email?.trim().toLowerCase() ?? "",
       id: user.id,
-      lastSignInAt: user.last_sign_in_at,
+      lastSignInAt: user.last_sign_in_at ?? null,
       userMetadata:
         typeof user.user_metadata === "object" && user.user_metadata !== null
           ? (user.user_metadata as Record<string, unknown>)
@@ -324,7 +324,7 @@ export async function createAdminUser(input: AdminUserUpsertInput) {
     authUser = {
       email,
       id: data.user.id,
-      lastSignInAt: data.user.last_sign_in_at,
+      lastSignInAt: data.user.last_sign_in_at ?? null,
       userMetadata:
         typeof data.user.user_metadata === "object" && data.user.user_metadata !== null
           ? (data.user.user_metadata as Record<string, unknown>)

@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
-import Link from "next/link"
 import { notFound } from "next/navigation"
 
+import { AdminOrdersTable } from "@/components/admin/admin-orders-table"
 import { requireAdminBranchAccess } from "@/lib/admin-auth"
 import { getPublicBranchBySlug } from "@/lib/branches"
 import { listAdminOrdersByBranch } from "@/lib/orders"
@@ -46,60 +46,7 @@ export default async function AdminOrdersPage({ params }: AdminOrdersPageProps) 
         </div>
       </header>
 
-      <section className="rounded-4xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="flex items-center justify-between gap-4 border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
-          <div>
-            <h2 className="text-lg font-semibold">Pedidos registrados</h2>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">{orders.length} pedidos encontrados para esta sucursal.</p>
-          </div>
-        </div>
-
-        {orders.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-zinc-50 text-zinc-500 dark:bg-zinc-950 dark:text-zinc-400">
-                <tr>
-                  <th className="px-6 py-4 font-medium">Pedido</th>
-                  <th className="px-6 py-4 font-medium">Cliente</th>
-                  <th className="px-6 py-4 font-medium">Tipo</th>
-                  <th className="px-6 py-4 font-medium">Moneda</th>
-                  <th className="px-6 py-4 font-medium">Total</th>
-                  <th className="px-6 py-4 font-medium">Estado</th>
-                  <th className="px-6 py-4 font-medium">Fecha</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((order) => (
-                  <tr key={order.id} className="border-t border-zinc-200 dark:border-zinc-800">
-                    <td className="px-6 py-4 align-top">
-                      <Link href={`/admin/${branch.slug}/orders/${order.id}`} className="font-medium text-zinc-950 underline-offset-4 hover:underline dark:text-zinc-50">
-                        {order.id}
-                      </Link>
-                    </td>
-                    <td className="px-6 py-4 align-top">
-                      <div className="space-y-1">
-                        <p className="font-medium text-zinc-950 dark:text-zinc-50">{order.customerName}</p>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400">{order.customerEmail}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 align-top">{order.fulfillmentType === "pickup" ? "Retiro" : "Delivery"}</td>
-                    <td className="px-6 py-4 align-top">{order.currency}</td>
-                    <td className="px-6 py-4 align-top">
-                      {order.currency === "USD" ? order.subtotalUsd.toFixed(2) : order.subtotalVes.toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 align-top">
-                      <span className="text-emerald-700 dark:text-emerald-400">{order.status}</span>
-                    </td>
-                    <td className="px-6 py-4 align-top">{new Date(order.createdAt).toLocaleString("es-VE")}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="px-6 py-10 text-sm text-zinc-500 dark:text-zinc-400">Aún no hay pedidos registrados para esta sucursal.</div>
-        )}
-      </section>
+      <AdminOrdersTable branchSlug={branch.slug} orders={orders} />
     </main>
   )
 }

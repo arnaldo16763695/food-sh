@@ -10,9 +10,9 @@ import {
   Sparkles,
   Sun,
 } from "lucide-react"
-import { useTheme } from "next-themes"
 import { useRouter } from "next/navigation"
 
+import { useTheme } from "@/components/theme-provider"
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser"
 import {
   Avatar,

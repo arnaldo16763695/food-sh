@@ -215,6 +215,18 @@ export function AppSidebar({ branchSlug, ...props }: AppSidebarProps) {
           ],
         },
         {
+          title: "Sucursales",
+          url: "/admin/branches",
+          icon: Store,
+          isActive: pathname.startsWith("/admin/branches"),
+          items: [
+            {
+              title: "Estado operativo",
+              url: "/admin/branches",
+            },
+          ],
+        },
+        {
           title: "Usuarios del sistema",
           url: usersUrl,
           icon: KeyRound,
@@ -235,6 +247,30 @@ export function AppSidebar({ branchSlug, ...props }: AppSidebarProps) {
             {
               title: "Base global",
               url: "/admin/customers",
+            },
+          ],
+        },
+        {
+          title: "Configuración general",
+          url: "/admin/settings",
+          icon: Settings2,
+          isActive: pathname.startsWith("/admin/settings"),
+          items: [
+            {
+              title: "Servicios y parámetros",
+              url: "/admin/settings",
+            },
+          ],
+        },
+        {
+          title: "Integraciones",
+          url: "/admin/integrations",
+          icon: PlugZap,
+          isActive: pathname.startsWith("/admin/integrations"),
+          items: [
+            {
+              title: "Estado global",
+              url: "/admin/integrations",
             },
           ],
         },
@@ -312,6 +348,11 @@ export function AppSidebar({ branchSlug, ...props }: AppSidebarProps) {
           icon: Blocks,
         },
         {
+          name: "Sucursales",
+          url: "/admin/branches",
+          icon: Store,
+        },
+        {
           name: "Usuarios",
           url: "/admin/users",
           icon: ShoppingBasket,
@@ -320,6 +361,16 @@ export function AppSidebar({ branchSlug, ...props }: AppSidebarProps) {
           name: "Clientes globales",
           url: "/admin/customers",
           icon: Settings2,
+        },
+        {
+          name: "Configuración general",
+          url: "/admin/settings",
+          icon: Store,
+        },
+        {
+          name: "Integraciones",
+          url: "/admin/integrations",
+          icon: PlugZap,
         },
       ]
     }
