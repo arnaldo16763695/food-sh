@@ -226,6 +226,18 @@ export function AppSidebar({ branchSlug, ...props }: AppSidebarProps) {
             },
           ],
         },
+        {
+          title: "Clientes globales",
+          url: "/admin/customers",
+          icon: Users,
+          isActive: pathname.startsWith("/admin/customers"),
+          items: [
+            {
+              title: "Base global",
+              url: "/admin/customers",
+            },
+          ],
+        },
       ]
     }
 
@@ -262,15 +274,6 @@ export function AppSidebar({ branchSlug, ...props }: AppSidebarProps) {
         ],
       },
       {
-        title: "Usuarios del sistema",
-        url: usersUrl,
-        icon: KeyRound,
-        isActive: pathname.startsWith("/admin/users"),
-        items: [
-          { title: "Perfiles y permisos", url: usersUrl },
-        ],
-      },
-      {
         title: "Sucursales y horarios",
         url: `/admin/${branchSlug}/settings`,
         icon: Store,
@@ -302,7 +305,23 @@ export function AppSidebar({ branchSlug, ...props }: AppSidebarProps) {
 
   const quickLinks = React.useMemo(() => {
     if (!branchSlug) {
-      return data.projects
+      return [
+        {
+          name: "Dashboard central",
+          url: "/admin",
+          icon: Blocks,
+        },
+        {
+          name: "Usuarios",
+          url: "/admin/users",
+          icon: ShoppingBasket,
+        },
+        {
+          name: "Clientes globales",
+          url: "/admin/customers",
+          icon: Settings2,
+        },
+      ]
     }
 
     return [

@@ -1,5 +1,4 @@
 import { requireAdminBranchAccess } from "@/lib/admin-auth"
-import { AdminBranchContextSync } from "@/components/admin/admin-branch-context-sync"
 import { AdminShell } from "@/components/admin/admin-shell"
 
 type AdminLayoutProps = Readonly<{
@@ -16,7 +15,6 @@ export default async function AdminLayout({
 
   return (
     <AdminShell branchSlug={currentBranch.branchSlug} currentLabel={currentBranch.branchTitle}>
-      <AdminBranchContextSync branchSlug={currentBranch.branchSlug} />
       {children}
     </AdminShell>
   )
