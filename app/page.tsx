@@ -1,10 +1,15 @@
 import Link from "next/link"
 
 import { BrandLogo } from "@/components/site/brand-logo"
+import { getAuthenticatedAdminUser, listAccessibleAdminBranches } from "@/lib/admin-auth"
 import { listPublicBranches } from "@/lib/branches"
 
 export default async function Home() {
   const branches = await listPublicBranches()
+  const user = await getAuthenticatedAdminUser()
+  const accessibleAdminBranchSlugs = user
+    ? new Set((await listAccessibleAdminBranches(user.id)).map((branch) => branch.branchSlug))
+    : new Set<string>()
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,var(--brand-surface)_0%,#f5f1e8_40%,#fbfaf7_100%)] text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
@@ -20,10 +25,10 @@ export default async function Home() {
                 <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
                   Selecciona una sucursal para continuar.
                 </h1>
-                <p className="max-w-2xl text-sm leading-7 text-zinc-600 dark:text-zinc-400">
+                {/* <p className="max-w-2xl text-sm leading-7 text-zinc-600 dark:text-zinc-400">
                   La tienda pública y el panel administrativo operan con contexto de sucursal para
                   evitar confusiones y preparar la base para autenticación, autorización y permisos.
-                </p>
+                </p> */}
               </div>
             </div>
 
@@ -51,14 +56,16 @@ export default async function Home() {
                   href={`/tienda/${branch.slug}`}
                   className="inline-flex h-11 items-center justify-center rounded-full bg-zinc-950 px-5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-300"
                 >
-                  Ver storefront
+                  Ver menú
                 </Link>
-                <Link
-                  href={`/admin/${branch.slug}`}
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-zinc-300 px-5 text-sm font-medium transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-                >
-                  Ver dashboard
-                </Link>
+                {accessibleAdminBranchSlugs.has(branch.slug) ? (
+                  <Link
+                    href={`/admin/${branch.slug}`}
+                    className="inline-flex h-11 items-center justify-center rounded-full border border-zinc-300 px-5 text-sm font-medium transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                  >
+                    Ver dashboard
+                  </Link>
+                ) : null}
               </div>
             </article>
           ))}
