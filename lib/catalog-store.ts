@@ -50,15 +50,24 @@ async function getProductForIntegration(branchId: string, externalId: string) {
   return data
 }
 
-export async function listPublicProductsByBranch(branchId: string) {
+export async function listPublicProductsByBranch(branchSlug: string, searchQuery?: string) {
   const supabase = createSupabasePublicClient()
-  const { data, error } = await supabase
+  let query = supabase
     .from("products")
     .select("*")
-    .eq("branch_id", branchId)
+    .eq("branch_id", branchSlug)
     .eq("is_active", true)
     .eq("online_enabled", true)
     .order("updated_at", { ascending: false })
+
+  const normalizedSearchQuery = searchQuery?.trim().replace(/\s+/g, " ")
+
+  if (normalizedSearchQuery) {
+    const pattern = `%${normalizedSearchQuery}%`
+    query = query.or(`name.ilike.${pattern},description.ilike.${pattern},sku.ilike.${pattern}`)
+  }
+
+  const { data, error } = await query
 
   if (error) {
     throw error

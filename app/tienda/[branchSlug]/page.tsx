@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
+import { CatalogSearch } from "@/components/site/catalog-search"
 import { ProductCard } from "@/components/site/product-card"
 import { StorefrontHeader } from "@/components/site/storefront-header"
 import { StorefrontHero } from "@/components/site/storefront-hero"
@@ -10,6 +11,11 @@ import { buildCustomerAuthUrl, getCustomerAccessState } from "@/lib/customer-aut
 
 type BranchStorePageProps = {
   params: Promise<{ branchSlug: string }>
+  searchParams: Promise<{ q?: string }>
+}
+
+function normalizeCatalogSearchQuery(query: string | undefined) {
+  return query?.trim().replace(/\s+/g, " ") ?? ""
 }
 
 async function getBranchCatalogPreview(branchSlug: string) {
@@ -47,9 +53,11 @@ export async function generateMetadata({ params }: BranchStorePageProps): Promis
   }
 }
 
-export default async function BranchStorePage({ params }: BranchStorePageProps) {
+export default async function BranchStorePage({ params, searchParams }: BranchStorePageProps) {
   const { branchSlug } = await params
+  const { q } = await searchParams
   const selectedBranch = await getPublicBranchBySlug(branchSlug)
+  const searchQuery = normalizeCatalogSearchQuery(q)
 
   if (!selectedBranch) {
     notFound()
@@ -75,10 +83,11 @@ export default async function BranchStorePage({ params }: BranchStorePageProps) 
     productCount: branch.ok ? branch.products.length : 0,
   }))
 
-  const currentProducts = currentBranch.ok ? currentBranch.products : []
+  const currentProducts = currentBranch.ok ? await listPublicProductsByBranch(selectedBranch.slug, searchQuery) : []
   const customerAccessState = await getCustomerAccessState()
+  const catalogPath = searchQuery ? `/tienda/${selectedBranch.slug}?q=${encodeURIComponent(searchQuery)}` : `/tienda/${selectedBranch.slug}`
   const authUrl = buildCustomerAuthUrl(
-    `/tienda/${selectedBranch.slug}`,
+    catalogPath,
     customerAccessState.status === "guest"
       ? "auth-required"
       : customerAccessState.status === "unconfirmed"
@@ -109,17 +118,32 @@ export default async function BranchStorePage({ params }: BranchStorePageProps) 
           selectedBranchSlug={selectedBranch.slug}
           selectedBranchTitle={selectedBranch.title}
           branches={heroBranches}
+          searchQuery={searchQuery}
         />
 
-        <section className="mt-10">
-          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <section className="mt-4">
+          <div className="mb-6 flex flex-col gap-4">
             <div>
-              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Catálogo</p>
-              <h2 className="mt-1 text-2xl font-semibold tracking-tight">Productos disponibles</h2>
+              
+              {searchQuery ? (
+                <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                  Resultados para <span className="font-medium text-zinc-700 dark:text-zinc-200">{searchQuery}</span>.
+                </p>
+              ) : null}
             </div>
+
+            <div className="flex justify-end">
+              <CatalogSearch key={searchQuery} initialQuery={searchQuery} />
+            </div>
+          </div>
+
+          <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
               {currentProducts.length} productos visibles en {selectedBranch.title}.
             </p>
+            {searchQuery ? (
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">Comparte esta URL para abrir el mismo filtro.</p>
+            ) : null}
           </div>
 
           {currentBranch.ok ? (
@@ -138,7 +162,9 @@ export default async function BranchStorePage({ params }: BranchStorePageProps) 
               </div>
             ) : (
               <div className="rounded-4xl border border-dashed border-zinc-300 bg-white/70 p-8 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
-                Esta sucursal todavía no tiene productos visibles en el catálogo online.
+                {searchQuery
+                  ? `No encontramos productos para "${searchQuery}" en esta sucursal.`
+                  : "Esta sucursal todavía no tiene productos visibles en el catálogo online."}
               </div>
             )
           ) : (

@@ -114,7 +114,7 @@ export function AddToBagButton({ authUrl, branchSlug, canAddToBag, customerUserI
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetTrigger asChild>
+      <SheetTrigger asChild className="cursor-pointer">
         <Button
           type="button"
           onClick={(event) => {

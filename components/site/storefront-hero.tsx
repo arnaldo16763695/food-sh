@@ -17,12 +17,14 @@ type StorefrontHeroProps = {
   selectedBranchSlug: string
   selectedBranchTitle: string
   branches: HeroBranch[]
+  searchQuery: string
 }
 
 export function StorefrontHero({
   selectedBranchSlug,
   selectedBranchTitle,
   branches,
+  searchQuery,
 }: StorefrontHeroProps) {
   const pathname = usePathname()
   const router = useRouter()
@@ -35,12 +37,20 @@ export function StorefrontHero({
 
   function buildBranchHref(nextBranchSlug: string) {
     const currentPrefix = `/tienda/${selectedBranchSlug}`
+    const params = new URLSearchParams()
 
-    if (pathname.startsWith(currentPrefix)) {
-      return pathname.replace(currentPrefix, `/tienda/${nextBranchSlug}`)
+    if (searchQuery) {
+      params.set("q", searchQuery)
     }
 
-    return `/tienda/${nextBranchSlug}`
+    const nextSearch = params.toString()
+
+    if (pathname.startsWith(currentPrefix)) {
+      const nextPathname = pathname.replace(currentPrefix, `/tienda/${nextBranchSlug}`)
+      return nextSearch ? `${nextPathname}?${nextSearch}` : nextPathname
+    }
+
+    return nextSearch ? `/tienda/${nextBranchSlug}?${nextSearch}` : `/tienda/${nextBranchSlug}`
   }
 
   function handleBranchChange(nextBranchSlug: string) {

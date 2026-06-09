@@ -16,7 +16,7 @@ export function ProductCard({ authUrl, branchSlug, canAddToBag, customerUserId, 
 
   return (
     <article className="group overflow-hidden rounded-4xl border border-white/70 bg-white shadow-[0_20px_50px_rgba(24,24,27,0.05)] transition-transform duration-200 hover:-translate-y-1 dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div className="relative aspect-4/3 overflow-hidden">
         {hasImage ? (
           <div className="absolute inset-0 bg-[linear-gradient(135deg,color-mix(in_oklab,var(--brand-accent)_16%,white)_0%,white_52%,color-mix(in_oklab,var(--brand-secondary)_10%,white)_100%)] dark:bg-[linear-gradient(135deg,color-mix(in_oklab,var(--brand-deep)_70%,black)_0%,#17171d_55%,color-mix(in_oklab,var(--brand-secondary)_26%,black)_100%)]" />
         ) : null}
@@ -53,7 +53,7 @@ export function ProductCard({ authUrl, branchSlug, canAddToBag, customerUserId, 
             {product.sku}
           </span>
 
-          <span className="rounded-full bg-(--brand-secondary) px-2.5 py-1 text-[11px] font-medium text-[var(--brand-secondary-foreground)]">
+          <span className="rounded-full bg-(--brand-secondary) px-2.5 py-1 text-[11px] font-medium text-var(--brand-secondary-foreground)">
             Stock {product.stock}
           </span>
         </div>
@@ -81,7 +81,7 @@ export function ProductCard({ authUrl, branchSlug, canAddToBag, customerUserId, 
 
         <div className="border-t border-zinc-200 pt-4 dark:border-zinc-800">
           <p className="text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400">Precio</p>
-          <p className="mt-1 text-lg font-semibold text-[var(--brand-primary)]">USD {product.priceUsd.toFixed(2)}</p>
+          <p className="mt-1 text-lg font-semibold text-var(--brand-primary)">USD {product.priceUsd.toFixed(2)}</p>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">VES {product.priceVes.toFixed(2)}</p>
         </div>
 
