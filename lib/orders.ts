@@ -168,6 +168,57 @@ export async function listCustomerOrders(userId: string): Promise<CustomerOrderL
   return data.map(mapAdminOrder)
 }
 
+export async function getCustomerOrderById(
+  userId: string,
+  orderId: string,
+): Promise<CustomerOrderListItem & Pick<AdminOrderDetail, "notes" | "items"> | null> {
+  const supabase = createSupabaseAdminClient()
+  const { data: order, error: orderError } = await supabase
+    .from("orders")
+    .select(ORDER_DETAIL_FIELDS)
+    .eq("customer_user_id", userId)
+    .eq("id", orderId)
+    .maybeSingle()
+
+  if (orderError) {
+    throw orderError
+  }
+
+  if (!order) {
+    return null
+  }
+
+  const { data: items, error: itemsError } = await supabase
+    .from("order_items")
+    .select(
+      "id, product_id, product_name, sku, quantity, note, exclusions, unit_price_usd, unit_price_ves, line_total_usd, line_total_ves",
+    )
+    .eq("order_id", orderId)
+    .order("created_at", { ascending: true })
+
+  if (itemsError) {
+    throw itemsError
+  }
+
+  return {
+    ...mapAdminOrder(order),
+    notes: order.notes,
+    items: items.map((item) => ({
+      id: item.id,
+      productId: item.product_id,
+      productName: item.product_name,
+      sku: item.sku,
+      quantity: item.quantity,
+      note: item.note,
+      exclusions: item.exclusions,
+      unitPriceUsd: item.unit_price_usd,
+      unitPriceVes: item.unit_price_ves,
+      lineTotalUsd: item.line_total_usd,
+      lineTotalVes: item.line_total_ves,
+    })),
+  }
+}
+
 export async function getAdminOrderById(branchSlug: string, orderId: string): Promise<AdminOrderDetail | null> {
   const supabase = createSupabaseAdminClient()
   const { data: order, error: orderError } = await supabase

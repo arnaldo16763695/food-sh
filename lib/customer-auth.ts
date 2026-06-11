@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { type User } from "@supabase/supabase-js"
 
+import { createSupabaseAdminClient } from "@/lib/supabase"
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 
 export type CustomerProfile = {
@@ -30,7 +31,15 @@ export type ReadyCustomerAccessState = Extract<CustomerAccessState, { status: "r
 
 type CustomerAuthError = "auth-required" | "email-not-confirmed" | "profile-incomplete"
 
-function isCustomerProfileComplete(profile: CustomerProfile | null) {
+function mapCustomerProfile(row: { user_id: string; full_name: string; phone: string }): CustomerProfile {
+  return {
+    userId: row.user_id,
+    fullName: row.full_name,
+    phone: row.phone,
+  }
+}
+
+export function isCustomerProfileComplete(profile: CustomerProfile | null) {
   return Boolean(profile?.fullName.trim()) && Boolean(profile?.phone.trim())
 }
 
@@ -69,11 +78,54 @@ export async function getCustomerProfile(userId: string): Promise<CustomerProfil
     return null
   }
 
-  return {
-    userId: data.user_id,
-    fullName: data.full_name,
-    phone: data.phone,
+  return mapCustomerProfile(data)
+}
+
+export async function getCustomerProfileByUserId(userId: string): Promise<CustomerProfile | null> {
+  const supabase = createSupabaseAdminClient()
+  const { data, error } = await supabase
+    .from("customer_profiles")
+    .select("user_id, full_name, phone")
+    .eq("user_id", userId)
+    .maybeSingle()
+
+  if (error) {
+    throw error
   }
+
+  return data ? mapCustomerProfile(data) : null
+}
+
+export async function upsertCustomerProfile({
+  userId,
+  fullName,
+  phone,
+}: {
+  userId: string
+  fullName: string
+  phone: string
+}) {
+  const timestamp = new Date().toISOString()
+  const supabase = createSupabaseAdminClient()
+  const { data, error } = await supabase
+    .from("customer_profiles")
+    .upsert(
+      {
+        user_id: userId,
+        full_name: fullName.trim(),
+        phone: phone.trim(),
+        updated_at: timestamp,
+      },
+      { onConflict: "user_id" },
+    )
+    .select("user_id, full_name, phone")
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return mapCustomerProfile(data)
 }
 
 export async function getCustomerAccessState(): Promise<CustomerAccessState> {
