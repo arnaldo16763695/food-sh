@@ -12,10 +12,10 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-browser"
 type CustomerAuthFormProps = {
   initialEmail: string
   initialFullName: string
-  initialMode: "login" | "signup"
+  initialMode: "login" | "signup" | "recover" | "reset-password"
   initialPhone: string
   nextPath: string
-  status: "guest" | "unconfirmed" | "needs-profile"
+  status: "guest" | "unconfirmed" | "needs-profile" | "ready"
 }
 
 export function CustomerAuthForm({
@@ -28,11 +28,12 @@ export function CustomerAuthForm({
 }: CustomerAuthFormProps) {
   const router = useRouter()
   const clear = useShoppingBagStore((state) => state.clear)
-  const [mode, setMode] = useState<"login" | "signup">(initialMode)
+  const [mode, setMode] = useState<"login" | "signup" | "recover" | "reset-password">(initialMode)
   const [fullName, setFullName] = useState(initialFullName)
   const [phone, setPhone] = useState(initialPhone)
   const [email, setEmail] = useState(initialEmail)
   const [password, setPassword] = useState("")
+  const [passwordConfirmation, setPasswordConfirmation] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [resendMessage, setResendMessage] = useState<string | null>(null)
@@ -40,6 +41,12 @@ export function CustomerAuthForm({
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [isResending, setIsResending] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
+
+  function resetFeedback() {
+    setError(null)
+    setMessage(null)
+    setResendMessage(null)
+  }
 
   async function handleResendNotification() {
     setError(null)
@@ -79,8 +86,7 @@ export function CustomerAuthForm({
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setError(null)
-    setMessage(null)
+    resetFeedback()
     setIsSubmitting(true)
 
     try {
@@ -106,8 +112,7 @@ export function CustomerAuthForm({
 
   async function handleSignup(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setError(null)
-    setMessage(null)
+    resetFeedback()
     setIsSubmitting(true)
 
     try {
@@ -147,8 +152,7 @@ export function CustomerAuthForm({
   }
 
   async function handleGoogleLogin() {
-    setError(null)
-    setMessage(null)
+    resetFeedback()
     setIsGoogleLoading(true)
 
     try {
@@ -172,8 +176,7 @@ export function CustomerAuthForm({
 
   async function handleCompleteProfile(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setError(null)
-    setMessage(null)
+    resetFeedback()
     setIsSubmitting(true)
 
     try {
@@ -210,8 +213,7 @@ export function CustomerAuthForm({
   }
 
   async function handleSignOut() {
-    setError(null)
-    setMessage(null)
+    resetFeedback()
     setIsSigningOut(true)
 
     try {
@@ -230,6 +232,80 @@ export function CustomerAuthForm({
       setError(caughtError instanceof Error ? caughtError.message : "No se pudo cerrar la sesión.")
     } finally {
       setIsSigningOut(false)
+    }
+  }
+
+  async function handleRecoveryRequest(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    resetFeedback()
+    setIsSubmitting(true)
+
+    try {
+      const response = await fetch("/api/customer-auth/recover-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          nextPath,
+        }),
+      })
+
+      const result = (await response.json()) as { data?: { deliveryMethod: "console" | "resend" | "unknown" }; error?: string }
+
+      if (!response.ok) {
+        setError(result.error ?? "No se pudo iniciar la recuperación de contraseña.")
+        return
+      }
+
+      setMessage(
+        result.data?.deliveryMethod === "console"
+          ? "No hay Resend configurado todavía. Imprimimos la URL de recuperación en la consola del servidor para esta prueba."
+          : "Si existe una cuenta con ese correo, te enviamos instrucciones para recuperar el acceso.",
+      )
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "No se pudo iniciar la recuperación de contraseña.")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  async function handleResetPassword(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    resetFeedback()
+
+    if (password.length < 8) {
+      setError("La nueva contraseña debe tener al menos 8 caracteres.")
+      return
+    }
+
+    if (password !== passwordConfirmation) {
+      setError("La confirmación de la contraseña no coincide.")
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const supabase = createSupabaseBrowserClient()
+      const { error: updateError } = await supabase.auth.updateUser({
+        password,
+      })
+
+      if (updateError) {
+        setError(updateError.message)
+        return
+      }
+
+      setPassword("")
+      setPasswordConfirmation("")
+      setMessage("Tu contraseña fue actualizada. Ya puedes continuar con tu compra o iniciar sesión de nuevo.")
+      setMode("login")
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "No se pudo actualizar la contraseña.")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -289,6 +365,94 @@ export function CustomerAuthForm({
     )
   }
 
+  if (mode === "reset-password") {
+    return (
+      <form onSubmit={handleResetPassword} className="grid gap-4">
+        <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-500/10 dark:text-emerald-300">
+          Define una nueva contraseña para recuperar el acceso a tu cuenta.
+        </div>
+
+        <label className="grid gap-2">
+          <span className="text-sm font-medium">Nueva contraseña</span>
+          <Input
+            type="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            minLength={8}
+            required
+          />
+        </label>
+
+        <label className="grid gap-2">
+          <span className="text-sm font-medium">Confirmar contraseña</span>
+          <Input
+            type="password"
+            autoComplete="new-password"
+            value={passwordConfirmation}
+            onChange={(event) => setPasswordConfirmation(event.target.value)}
+            minLength={8}
+            required
+          />
+        </label>
+
+        {message ? <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-500/10 dark:text-emerald-300">{message}</div> : null}
+        {error ? <div className="rounded-3xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-500/10 dark:text-red-300">{error}</div> : null}
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Actualizando..." : "Guardar nueva contraseña"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setMode("login")
+              setPassword("")
+              setPasswordConfirmation("")
+              resetFeedback()
+            }}
+          >
+            Volver al acceso
+          </Button>
+        </div>
+      </form>
+    )
+  }
+
+  if (mode === "recover") {
+    return (
+      <div className="grid gap-6">
+        <form onSubmit={handleRecoveryRequest} className="grid gap-4">
+          <label className="grid gap-2">
+            <span className="text-sm font-medium">Correo electrónico</span>
+            <Input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
+          </label>
+
+          {message ? <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-500/10 dark:text-emerald-300">{message}</div> : null}
+          {error ? <div className="rounded-3xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-500/10 dark:text-red-300">{error}</div> : null}
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Enviando..." : "Enviar enlace de recuperación"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setMode("login")
+                setPassword("")
+                resetFeedback()
+              }}
+            >
+              Volver al acceso
+            </Button>
+          </div>
+        </form>
+      </div>
+    )
+  }
+
   const isSignup = mode === "signup"
 
   return (
@@ -298,7 +462,7 @@ export function CustomerAuthForm({
           type="button"
           onClick={() => {
             setMode("login")
-            setError(null)
+            resetFeedback()
           }}
           className={[
             "rounded-full px-4 py-2 text-sm font-medium transition-colors",
@@ -311,7 +475,7 @@ export function CustomerAuthForm({
           type="button"
           onClick={() => {
             setMode("signup")
-            setError(null)
+            resetFeedback()
           }}
           className={[
             "rounded-full px-4 py-2 text-sm font-medium transition-colors",
@@ -326,12 +490,12 @@ export function CustomerAuthForm({
         {isGoogleLoading ? "Redirigiendo a Google..." : "Continuar con Google"}
       </Button>
 
-      <div className="relative text-center text-xs uppercase tracking-[0.18em] text-zinc-400">
+        <div className="relative text-center text-xs uppercase tracking-[0.18em] text-zinc-400">
         <span className="bg-white px-3 dark:bg-zinc-900">o continúa con tu correo</span>
         <div className="absolute inset-x-0 top-1/2 -z-10 border-t border-zinc-200 dark:border-zinc-800" />
       </div>
 
-      <form onSubmit={isSignup ? handleSignup : handleLogin} className="grid gap-4">
+        <form onSubmit={isSignup ? handleSignup : handleLogin} className="grid gap-4">
         {isSignup ? (
           <>
             <label className="grid gap-2">
@@ -362,6 +526,20 @@ export function CustomerAuthForm({
             required
           />
         </label>
+
+        {!isSignup ? (
+          <button
+            type="button"
+            onClick={() => {
+              setMode("recover")
+              setPassword("")
+              resetFeedback()
+            }}
+            className="w-fit text-sm font-medium text-zinc-600 underline-offset-4 hover:underline dark:text-zinc-300"
+          >
+            Olvidé mi contraseña
+          </button>
+        ) : null}
 
         {message ? <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-500/10 dark:text-emerald-300">{message}</div> : null}
         {resendMessage ? <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-500/10 dark:text-emerald-300">{resendMessage}</div> : null}

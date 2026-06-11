@@ -2,6 +2,9 @@ import { getAppUrl } from "@/lib/app-url"
 
 type CustomerEmailInput = {
   actionUrl: string
+  ctaLabel?: string
+  heading?: string
+  intro?: string
   subject: string
   to: string
 }
@@ -19,19 +22,24 @@ function getResendConfig() {
   }
 }
 
-function buildEmailHtml(actionUrl: string) {
+function buildEmailHtml({
+  actionUrl,
+  ctaLabel = "Continuar",
+  heading = "Confirma tu acceso a Shanghaipf",
+  intro = "Usa el siguiente enlace para continuar con tu solicitud en la tienda online.",
+}: Pick<CustomerEmailInput, "actionUrl" | "ctaLabel" | "heading" | "intro">) {
   return `
     <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #18181b;">
-      <h1 style="font-size: 24px; margin-bottom: 16px;">Confirma tu acceso a Shanghaipf</h1>
+      <h1 style="font-size: 24px; margin-bottom: 16px;">${heading}</h1>
       <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-        Usa el siguiente enlace para confirmar tu correo y continuar con tu compra en la tienda online.
+        ${intro}
       </p>
       <p style="margin-bottom: 24px;">
         <a
           href="${actionUrl}"
           style="display: inline-block; background: #18181b; color: #ffffff; padding: 14px 22px; border-radius: 999px; text-decoration: none; font-weight: 600;"
         >
-          Confirmar acceso
+          ${ctaLabel}
         </a>
       </p>
       <p style="font-size: 14px; line-height: 1.6; color: #52525b; margin-bottom: 8px;">
@@ -47,7 +55,7 @@ function buildEmailHtml(actionUrl: string) {
   `
 }
 
-export async function sendCustomerActionEmail({ actionUrl, subject, to }: CustomerEmailInput) {
+export async function sendCustomerActionEmail({ actionUrl, ctaLabel, heading, intro, subject, to }: CustomerEmailInput) {
   const config = getResendConfig()
 
   if (!config.configured || !config.apiKey || !config.fromEmail) {
@@ -66,7 +74,7 @@ export async function sendCustomerActionEmail({ actionUrl, subject, to }: Custom
     },
     body: JSON.stringify({
       from: `${config.fromName} <${config.fromEmail}>`,
-      html: buildEmailHtml(actionUrl),
+      html: buildEmailHtml({ actionUrl, ctaLabel, heading, intro }),
       subject,
       to: [to],
     }),

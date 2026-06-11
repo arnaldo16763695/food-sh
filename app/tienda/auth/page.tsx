@@ -21,19 +21,28 @@ const errorMessages: Record<string, string> = {
   "profile-incomplete": "Completa tu nombre y teléfono para continuar.",
   "oauth-callback": "No se pudo completar el acceso con Google. Inténtalo de nuevo.",
   "confirmation-link": "El enlace de confirmación no es válido o ya expiró.",
+  "recovery-link": "El enlace para restablecer la contraseña no es válido o ya expiró.",
 }
 
 const messageMessages: Record<string, string> = {
   "email-confirmed": "Tu correo fue confirmado. Ya puedes continuar con tu compra.",
+  "password-reset": "Tu contraseña fue actualizada. Ya puedes volver a entrar.",
+  "recovery-confirmed": "Ya puedes definir una nueva contraseña para tu cuenta.",
+  "recovery-sent": "Si existe una cuenta con ese correo, te enviamos instrucciones para recuperar el acceso.",
 }
 
 export default async function CustomerAuthPage({ searchParams }: CustomerAuthPageProps) {
   const resolvedSearchParams = await searchParams
   const nextPath = resolvedSearchParams.next ?? "/"
-  const mode = resolvedSearchParams.mode === "signup" ? "signup" : "login"
+  const mode =
+    resolvedSearchParams.mode === "signup" ||
+    resolvedSearchParams.mode === "recover" ||
+    resolvedSearchParams.mode === "reset-password"
+      ? resolvedSearchParams.mode
+      : "login"
   const access = await getCustomerAccessState()
 
-  if (access.status === "ready") {
+  if (access.status === "ready" && mode !== "reset-password") {
     redirect(nextPath)
   }
 
@@ -68,10 +77,24 @@ export default async function CustomerAuthPage({ searchParams }: CustomerAuthPag
           <div className="space-y-5">
             <div>
               <h2 className="text-2xl font-semibold tracking-tight">
-                {access.status === "needs-profile" ? "Completar perfil" : access.status === "unconfirmed" ? "Confirmar correo" : mode === "signup" ? "Crear cuenta" : "Iniciar sesión"}
+                {access.status === "needs-profile"
+                  ? "Completar perfil"
+                  : access.status === "unconfirmed"
+                    ? "Confirmar correo"
+                    : mode === "signup"
+                      ? "Crear cuenta"
+                      : mode === "recover"
+                        ? "Recuperar contraseña"
+                        : mode === "reset-password"
+                          ? "Nueva contraseña"
+                          : "Iniciar sesión"}
               </h2>
               <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-                {access.status === "guest"
+                {mode === "recover"
+                  ? "Te enviaremos un enlace para recuperar el acceso a tu cuenta."
+                  : mode === "reset-password"
+                    ? "Define una nueva contraseña segura para continuar."
+                    : access.status === "guest"
                   ? "Usa tu correo y contraseña o continúa con Google."
                   : "Tu sesión existe, pero todavía falta un paso para habilitar la compra."}
               </p>

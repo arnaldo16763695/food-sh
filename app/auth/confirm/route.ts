@@ -29,6 +29,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
+  if (type === "recovery") {
+    const redirectUrl = new URL(buildCustomerAuthUrl(nextPath), request.url)
+    redirectUrl.searchParams.set("message", "recovery-confirmed")
+    redirectUrl.searchParams.set("mode", "reset-password")
+    return NextResponse.redirect(redirectUrl)
+  }
+
   const redirectUrl = new URL(nextPath, request.url)
   redirectUrl.searchParams.set("message", "email-confirmed")
   return NextResponse.redirect(redirectUrl)
