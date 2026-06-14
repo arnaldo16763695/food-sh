@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,6 +28,7 @@ export function CustomerAuthForm({
 }: CustomerAuthFormProps) {
   const router = useRouter()
   const clear = useShoppingBagStore((state) => state.clear)
+  const supabase = useMemo(() => createSupabaseBrowserClient(), [])
   const [mode, setMode] = useState<"login" | "signup" | "recover" | "reset-password">(initialMode)
   const [fullName, setFullName] = useState(initialFullName)
   const [phone, setPhone] = useState(initialPhone)
@@ -41,6 +42,63 @@ export function CustomerAuthForm({
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [isResending, setIsResending] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
+  const [isRecoverySessionReady, setIsRecoverySessionReady] = useState(initialMode !== "reset-password")
+
+  useEffect(() => {
+    if (mode !== "reset-password") {
+      return
+    }
+
+    let cancelled = false
+
+    async function ensureRecoverySession() {
+      setIsRecoverySessionReady(false)
+
+      try {
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""))
+        const accessToken = hashParams.get("access_token")
+        const refreshToken = hashParams.get("refresh_token")
+
+        if (accessToken && refreshToken) {
+          const { error: setSessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          })
+
+          if (setSessionError) {
+            throw setSessionError
+          }
+
+          const nextUrl = new URL(window.location.href)
+          nextUrl.hash = ""
+          window.history.replaceState({}, "", nextUrl.toString())
+        } else {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession()
+
+          if (!session) {
+            throw new Error("Tu sesión de recuperación ya no está disponible. Solicita un enlace nuevo.")
+          }
+        }
+
+        if (!cancelled) {
+          setIsRecoverySessionReady(true)
+        }
+      } catch (caughtError) {
+        if (!cancelled) {
+          setError(caughtError instanceof Error ? caughtError.message : "No se pudo preparar la recuperación de contraseña.")
+          setIsRecoverySessionReady(false)
+        }
+      }
+    }
+
+    void ensureRecoverySession()
+
+    return () => {
+      cancelled = true
+    }
+  }, [mode, supabase])
 
   function resetFeedback() {
     setError(null)
@@ -90,7 +148,6 @@ export function CustomerAuthForm({
     setIsSubmitting(true)
 
     try {
-      const supabase = createSupabaseBrowserClient()
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -156,7 +213,6 @@ export function CustomerAuthForm({
     setIsGoogleLoading(true)
 
     try {
-      const supabase = createSupabaseBrowserClient()
       const { error: googleError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -180,7 +236,6 @@ export function CustomerAuthForm({
     setIsSubmitting(true)
 
     try {
-      const supabase = createSupabaseBrowserClient()
       const {
         data: { user },
         error: userError,
@@ -217,7 +272,6 @@ export function CustomerAuthForm({
     setIsSigningOut(true)
 
     try {
-      const supabase = createSupabaseBrowserClient()
       const { error: signOutError } = await supabase.auth.signOut()
 
       if (signOutError) {
@@ -288,7 +342,6 @@ export function CustomerAuthForm({
     setIsSubmitting(true)
 
     try {
-      const supabase = createSupabaseBrowserClient()
       const { error: updateError } = await supabase.auth.updateUser({
         password,
       })
@@ -302,6 +355,7 @@ export function CustomerAuthForm({
       setPasswordConfirmation("")
       setMessage("Tu contraseña fue actualizada. Ya puedes continuar con tu compra o iniciar sesión de nuevo.")
       setMode("login")
+      setIsRecoverySessionReady(true)
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "No se pudo actualizar la contraseña.")
     } finally {
@@ -372,6 +426,12 @@ export function CustomerAuthForm({
           Define una nueva contraseña para recuperar el acceso a tu cuenta.
         </div>
 
+        {!isRecoverySessionReady ? (
+          <div className="rounded-3xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-500/10 dark:text-amber-300">
+            Estamos validando tu enlace de recuperación antes de actualizar la contraseña.
+          </div>
+        ) : null}
+
         <label className="grid gap-2">
           <span className="text-sm font-medium">Nueva contraseña</span>
           <Input
@@ -400,7 +460,7 @@ export function CustomerAuthForm({
         {error ? <div className="rounded-3xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-500/10 dark:text-red-300">{error}</div> : null}
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting || !isRecoverySessionReady}>
             {isSubmitting ? "Actualizando..." : "Guardar nueva contraseña"}
           </Button>
           <Button
@@ -408,6 +468,7 @@ export function CustomerAuthForm({
             variant="outline"
             onClick={() => {
               setMode("login")
+              setIsRecoverySessionReady(true)
               setPassword("")
               setPasswordConfirmation("")
               resetFeedback()
@@ -441,6 +502,7 @@ export function CustomerAuthForm({
               variant="outline"
               onClick={() => {
                 setMode("login")
+                setIsRecoverySessionReady(true)
                 setPassword("")
                 resetFeedback()
               }}
@@ -462,6 +524,7 @@ export function CustomerAuthForm({
           type="button"
           onClick={() => {
             setMode("login")
+            setIsRecoverySessionReady(true)
             resetFeedback()
           }}
           className={[
@@ -475,6 +538,7 @@ export function CustomerAuthForm({
           type="button"
           onClick={() => {
             setMode("signup")
+            setIsRecoverySessionReady(true)
             resetFeedback()
           }}
           className={[
@@ -532,6 +596,7 @@ export function CustomerAuthForm({
             type="button"
             onClick={() => {
               setMode("recover")
+              setIsRecoverySessionReady(true)
               setPassword("")
               resetFeedback()
             }}
