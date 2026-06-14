@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     type: "recovery",
     email,
     options: {
-      redirectTo: `${getAppUrl()}/auth/confirm?next=${encodeURIComponent(nextPath)}`,
+      redirectTo: `${getAppUrl()}/tienda/auth?mode=reset-password&message=recovery-confirmed&next=${encodeURIComponent(nextPath)}`,
     },
   })
 

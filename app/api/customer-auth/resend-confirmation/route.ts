@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     type: "magiclink",
     email,
     options: {
-      redirectTo: `${getAppUrl()}/tienda/auth?message=email-confirmed&next=${encodeURIComponent(nextPath)}`,
+      redirectTo: `${getAppUrl()}/tienda/auth?mode=login&message=email-confirmed&next=${encodeURIComponent(nextPath)}`,
     },
   })
 
